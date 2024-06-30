@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/VadimOcLock/metrics-service/internal/entity"
-	"github.com/VadimOcLock/metrics-service/internal/usecase/metric_usecase"
+	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 	"log"
 	"net/http"
 	"strings"
@@ -12,12 +12,12 @@ import (
 
 type UpdateMetricsHandler struct {
 	ctx            context.Context
-	MetricsUseCase metric_usecase.UseCase
+	MetricsUseCase metricusecase.UseCase
 }
 
 func NewUpdateMetricsHandler(
 	ctx context.Context,
-	uc metric_usecase.UseCase,
+	uc metricusecase.UseCase,
 ) UpdateMetricsHandler {
 	return UpdateMetricsHandler{
 		ctx:            ctx,

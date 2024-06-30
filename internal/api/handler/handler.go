@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
-	"github.com/VadimOcLock/metrics-service/internal/usecase/metric_usecase"
+	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
@@ -15,7 +15,7 @@ func New(ctx context.Context) http.Handler {
 
 	store := somestore.New()
 	metricService := metricservice.New(&store)
-	metricUseCase := metric_usecase.New(metricService)
+	metricUseCase := metricusecase.New(metricService)
 	updateMetricsHandler := NewUpdateMetricsHandler(ctx, metricUseCase)
 
 	r.Post("/update/{type:[^/]*}/{name:[^/]*}/{value:[^/]*}", updateMetricsHandler.ServeHTTP)

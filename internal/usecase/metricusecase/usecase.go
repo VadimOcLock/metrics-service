@@ -1,4 +1,4 @@
-package metric_usecase
+package metricusecase
 
 import (
 	"context"
