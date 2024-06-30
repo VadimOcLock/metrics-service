@@ -1,4 +1,4 @@
-package some_store
+package somestore
 
 import (
 	"context"

@@ -5,7 +5,7 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
-	"github.com/VadimOcLock/metrics-service/internal/service/metric_service"
+	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"strconv"
 )
 
@@ -20,7 +20,7 @@ func (uc UseCase) UpdateMetric(ctx context.Context, dto entity.MetricDTO) (Updat
 		if dto.Name == "" {
 			return UpdateMetricResp{}, errorz.ErrInvalidMetricName
 		}
-		err = uc.metricService.UpdateGauge(ctx, metric_service.UpdateGaugeDTO{
+		err = uc.metricService.UpdateGauge(ctx, metricservice.UpdateGaugeDTO{
 			Name:  dto.Name,
 			Value: vl,
 		})
@@ -35,7 +35,7 @@ func (uc UseCase) UpdateMetric(ctx context.Context, dto entity.MetricDTO) (Updat
 		if dto.Name == "" {
 			return UpdateMetricResp{}, errorz.ErrInvalidMetricName
 		}
-		err = uc.metricService.UpdateCounter(ctx, metric_service.UpdateCounterDTO{
+		err = uc.metricService.UpdateCounter(ctx, metricservice.UpdateCounterDTO{
 			Name:  dto.Name,
 			Value: vl,
 		})

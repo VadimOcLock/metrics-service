@@ -2,20 +2,20 @@ package metric_usecase
 
 import (
 	"context"
-	"github.com/VadimOcLock/metrics-service/internal/service/metric_service"
+	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 )
 
 type UseCase struct {
-	metricService metric_service.Service
+	metricService metricservice.Service
 }
 
 type MetricService interface {
-	UpdateGauge(ctx context.Context, dto metric_service.UpdateGaugeDTO) error
-	UpdateCounter(ctx context.Context, dto metric_service.UpdateCounterDTO) error
+	UpdateGauge(ctx context.Context, dto metricservice.UpdateGaugeDTO) error
+	UpdateCounter(ctx context.Context, dto metricservice.UpdateCounterDTO) error
 }
 
 func New(
-	metricService metric_service.Service,
+	metricService metricservice.Service,
 ) UseCase {
 	return UseCase{
 		metricService: metricService,
