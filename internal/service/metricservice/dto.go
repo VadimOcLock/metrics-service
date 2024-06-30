@@ -1,0 +1,21 @@
+package metricservice
+
+import (
+	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
+)
+
+type UpdateGaugeDTO somestore.UpdateGaugeMetricParams
+
+func (dto UpdateGaugeDTO) Valid() error {
+	// may be later
+
+	return nil
+}
+
+type UpdateCounterDTO somestore.UpdateCounterMetricParams
+
+func (dto UpdateCounterDTO) Valid() error {
+	// may be later
+
+	return nil
+}
