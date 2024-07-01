@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/VadimOcLock/metrics-service/internal/worker"
-	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
-	"github.com/safeblock-dev/wr/taskgroup"
 	"os"
 	"syscall"
 	"time"
+
+	"github.com/VadimOcLock/metrics-service/internal/worker"
+	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
+	"github.com/safeblock-dev/wr/taskgroup"
 )
 
 func main() {

@@ -1,7 +1,9 @@
 package entity
 
-type Gauge float64
-type Counter int64
+type (
+	Gauge   float64
+	Counter int64
+)
 
 type Metrics struct {
 	Alloc         Gauge

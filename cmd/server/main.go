@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/VadimOcLock/metrics-service/internal/api/handler"
-	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
-	"github.com/safeblock-dev/wr/taskgroup"
 	"net/http"
 	"os"
 	"syscall"
+
+	"github.com/VadimOcLock/metrics-service/internal/api/handler"
+	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
+	"github.com/safeblock-dev/wr/taskgroup"
 )
 
 func main() {

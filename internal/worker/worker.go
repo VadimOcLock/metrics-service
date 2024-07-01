@@ -3,11 +3,12 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/VadimOcLock/metrics-service/internal/entity"
-	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/VadimOcLock/metrics-service/internal/entity"
+	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
 )
 
 type MetricsWorker struct {
@@ -31,7 +32,7 @@ func NewMetricsWorker(opts MetricsWorkerOpts) MetricsWorker {
 func (w MetricsWorker) Run(ctx context.Context) error {
 	var metrics entity.Metrics
 	var wg sync.WaitGroup
-	chanErr := make(chan error, 10)
+	chanErr := make(chan error, 1)
 	pollTimer := time.NewTimer(w.Opts.PoolInterval)
 	reportTimer := time.NewTimer(w.Opts.ReportInterval)
 	defer func() {
@@ -43,14 +44,15 @@ func (w MetricsWorker) Run(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			wg.Wait()
+
 			return ctx.Err()
 		case err := <-chanErr:
 			if err != nil {
 				log.Println(err)
 			}
 		case <-pollTimer.C:
+			wg.Add(1)
 			go func() {
-				wg.Add(1)
 				defer wg.Done()
 				err := w.collectMetrics(ctx, &metrics)
 				if err != nil {
@@ -60,8 +62,8 @@ func (w MetricsWorker) Run(ctx context.Context) error {
 				pollTimer.Reset(w.Opts.PoolInterval)
 			}()
 		case <-reportTimer.C:
+			wg.Add(1)
 			go func() {
-				wg.Add(1)
 				defer wg.Done()
 				err := w.sendMetrics(ctx, &metrics)
 				if err != nil {

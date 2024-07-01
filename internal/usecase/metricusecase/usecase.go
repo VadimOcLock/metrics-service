@@ -2,6 +2,7 @@ package metricusecase
 
 import (
 	"context"
+
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 )
 

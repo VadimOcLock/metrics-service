@@ -3,15 +3,17 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/VadimOcLock/metrics-service/internal/entity"
-	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"runtime"
+
+	"github.com/VadimOcLock/metrics-service/internal/entity"
+	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 )
 
-func (w MetricsWorker) collectMetrics(ctx context.Context, m *entity.Metrics) error {
+func (w MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) error {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
@@ -92,8 +94,11 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 			Name:  name,
 			Value: fmt.Sprintf("%v", value),
 		}
-		if err := sendMetric(client, w.Opts.ServerAddr, metric); err != nil {
-			//return errorz.ErrSendMetric
+		if err := sendMetric(ctx, sendMetricOpts{
+			client:        client,
+			serverAddress: w.Opts.ServerAddr,
+			metric:        metric,
+		}); err != nil {
 			return err
 		}
 	}
@@ -103,8 +108,11 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 			Name:  name,
 			Value: fmt.Sprintf("%v", value),
 		}
-		if err := sendMetric(client, w.Opts.ServerAddr, metric); err != nil {
-			//return errorz.ErrSendMetric
+		if err := sendMetric(ctx, sendMetricOpts{
+			client:        client,
+			serverAddress: w.Opts.ServerAddr,
+			metric:        metric,
+		}); err != nil {
 			return err
 		}
 	}
@@ -112,19 +120,30 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 	return nil
 }
 
-func sendMetric(client *http.Client, serverAddress string, metric entity.MetricDTO) error {
-	url := fmt.Sprintf("%s/update/%s/%s/%s", serverAddress, metric.Type, metric.Name, metric.Value)
-	req, err := http.NewRequest("POST", url, nil)
+type sendMetricOpts struct {
+	client        *http.Client
+	serverAddress string
+	metric        entity.MetricDTO
+}
+
+func sendMetric(ctx context.Context, opts sendMetricOpts) error {
+	metric := opts.metric
+	url := fmt.Sprintf("%s/update/%s/%s/%s", opts.serverAddress, metric.Type, metric.Name, metric.Value)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, nil)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "text/plain")
 
-	resp, err := client.Do(req)
+	resp, err := opts.client.Do(req)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		if cErr := Body.Close(); cErr != nil {
+			log.Println(cErr)
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Error response from server: %s\n", resp.Status)

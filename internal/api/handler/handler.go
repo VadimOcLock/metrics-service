@@ -2,11 +2,12 @@ package handler
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func New(ctx context.Context) http.Handler {
