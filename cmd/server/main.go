@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/VadimOcLock/metrics-service/internal/api/handler"
+	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
 	"github.com/safeblock-dev/wr/taskgroup"
 	"net/http"
 	"os"
@@ -21,6 +22,6 @@ func main() {
 
 	tasks := taskgroup.New()
 	tasks.Add(taskgroup.SignalHandler(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM))
-	tasks.Add(ServerLifecycle(server))
+	tasks.Add(lifecycle.HTTPServer(server))
 	_ = tasks.Run()
 }
