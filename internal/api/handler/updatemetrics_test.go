@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -193,12 +192,9 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			res := w.Result()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
-				if err != nil {
-					fmt.Println("body close err")
-				}
-			}(res.Body)
+			defer func() {
+				_ = res.Body.Close()
+			}()
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.response, string(resBody))
