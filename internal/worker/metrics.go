@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -141,11 +140,11 @@ func sendMetric(ctx context.Context, opts sendMetricOpts) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		if cErr := Body.Close(); cErr != nil {
+	defer func() {
+		if cErr := resp.Body.Close(); cErr != nil {
 			log.Println(cErr)
 		}
-	}(resp.Body)
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Error response from server: %s\n", resp.Status)
