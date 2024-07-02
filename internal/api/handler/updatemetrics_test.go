@@ -192,9 +192,7 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			res := w.Result()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
-			defer func(Body io.ReadCloser) {
-				_ = Body.Close()
-			}(res.Body)
+			_ = res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			assert.Equal(t, tt.want.response, string(resBody))

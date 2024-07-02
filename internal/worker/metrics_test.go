@@ -2,14 +2,15 @@ package worker
 
 import (
 	"context"
-	"github.com/VadimOcLock/metrics-service/internal/entity"
-	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
-	"github.com/VadimOcLock/metrics-service/internal/errorz"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/VadimOcLock/metrics-service/internal/entity"
+	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
+	"github.com/stretchr/testify/assert"
 )
 
 // Не понимаю как можно протестировать это без моков

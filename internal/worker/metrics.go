@@ -3,12 +3,13 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"runtime"
+
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
