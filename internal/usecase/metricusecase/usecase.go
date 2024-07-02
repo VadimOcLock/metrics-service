@@ -3,11 +3,17 @@ package metricusecase
 import (
 	"context"
 
+	"github.com/VadimOcLock/metrics-service/internal/entity"
+
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 )
 
-type UseCase struct {
+type MetricUseCase struct {
 	metricService metricservice.Service
+}
+
+type UseCase interface {
+	UpdateMetric(ctx context.Context, dto entity.MetricDTO) (UpdateMetricResp, error)
 }
 
 type MetricService interface {
@@ -18,7 +24,7 @@ type MetricService interface {
 func New(
 	metricService metricservice.Service,
 ) UseCase {
-	return UseCase{
+	return MetricUseCase{
 		metricService: metricService,
 	}
 }

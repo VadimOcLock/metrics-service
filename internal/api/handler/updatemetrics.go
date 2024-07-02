@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 )
@@ -31,20 +33,27 @@ var _ http.Handler = (*UpdateMetricsHandler)(nil)
 
 func (h UpdateMetricsHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
-		http.Error(res, "only POST method accept", http.StatusMethodNotAllowed)
+		http.Error(res, errorz.ErrMsgOnlyPOSTMethodAccept, http.StatusMethodNotAllowed)
 
 		return
 	}
-	parts := strings.Split(req.URL.Path, "/")
-	if len(parts) != 5 {
+	parts := strings.Split(strings.TrimPrefix(req.URL.Path, "/update/"), "/")
+	if len(parts) != 3 {
 		http.Error(res, "invalid count input params", http.StatusBadRequest)
 
 		return
 	}
+	for _, part := range parts {
+		if part == "" {
+			http.Error(res, errorz.ErrMsgEmptyMetricParam, http.StatusNotFound)
+
+			return
+		}
+	}
 	dto := entity.MetricDTO{
-		Type:  parts[2],
-		Name:  parts[3],
-		Value: parts[4],
+		Type:  parts[0],
+		Name:  parts[1],
+		Value: parts[2],
 	}
 	bodyObj, err := h.MetricsUseCase.UpdateMetric(h.ctx, dto)
 	if err != nil {
@@ -52,6 +61,7 @@ func (h UpdateMetricsHandler) ServeHTTP(res http.ResponseWriter, req *http.Reque
 
 		return
 	}
+	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	respBody, err := json.Marshal(bodyObj)
 	if err != nil {

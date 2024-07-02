@@ -10,7 +10,7 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 )
 
-func (uc UseCase) UpdateMetric(ctx context.Context, dto entity.MetricDTO) (UpdateMetricResp, error) {
+func (uc MetricUseCase) UpdateMetric(ctx context.Context, dto entity.MetricDTO) (UpdateMetricResp, error) {
 
 	switch dto.Type {
 	case enum.GaugeMetricType:

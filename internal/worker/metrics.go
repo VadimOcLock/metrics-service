@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"io"
 	"log"
 	"math/rand"
@@ -147,6 +148,8 @@ func sendMetric(ctx context.Context, opts sendMetricOpts) error {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Error response from server: %s\n", resp.Status)
+
+		return errorz.ErrSendMetricStatusNotOK
 	}
 
 	return nil
