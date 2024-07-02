@@ -3,59 +3,48 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
+	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
-	"strings"
-
-	"github.com/VadimOcLock/metrics-service/internal/errorz"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 )
 
-type UpdateMetricsHandler struct {
+type MetricsHandler struct {
 	ctx            context.Context
 	MetricsUseCase metricusecase.UseCase
 }
 
-func NewUpdateMetricsHandler(
+func NewMetricsHandler(
 	ctx context.Context,
 	uc metricusecase.UseCase,
-) UpdateMetricsHandler {
+) MetricsHandler {
 
-	return UpdateMetricsHandler{
+	return MetricsHandler{
 		ctx:            ctx,
 		MetricsUseCase: uc,
 	}
 }
 
-var _ http.Handler = (*UpdateMetricsHandler)(nil)
-
-func (h UpdateMetricsHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (h MetricsHandler) UpdateMetric(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, errorz.ErrMsgOnlyPOSTMethodAccept, http.StatusMethodNotAllowed)
 
 		return
 	}
-	parts := strings.Split(strings.TrimPrefix(req.URL.Path, "/update/"), "/")
-	if len(parts) != 3 {
-		http.Error(res, "invalid count input params", http.StatusBadRequest)
+	dto := entity.MetricDTO{
+		Type:  chi.URLParam(req, "type"),
+		Name:  chi.URLParam(req, "name"),
+		Value: chi.URLParam(req, "value"),
+	}
+	if dto.Type == "" || dto.Name == "" || dto.Value == "" {
+		http.Error(res, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 
 		return
 	}
-	for _, part := range parts {
-		if part == "" {
-			http.Error(res, errorz.ErrMsgEmptyMetricParam, http.StatusNotFound)
-
-			return
-		}
-	}
-	dto := entity.MetricDTO{
-		Type:  parts[0],
-		Name:  parts[1],
-		Value: parts[2],
-	}
-	bodyObj, err := h.MetricsUseCase.UpdateMetric(h.ctx, dto)
+	bodyObj, err := h.MetricsUseCase.Update(h.ctx, dto)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
@@ -66,11 +55,44 @@ func (h UpdateMetricsHandler) ServeHTTP(res http.ResponseWriter, req *http.Reque
 	respBody, err := json.Marshal(bodyObj)
 	if err != nil {
 		log.Printf("marshalling response body err: %s", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
 	}
-	_, err = res.Write(respBody)
-	if err != nil {
+	if _, err = res.Write(respBody); err != nil {
 		log.Printf("response body write err: %s", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+		return
+	}
+}
+
+func (h MetricsHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+
+		return
+	}
+	r, err := h.MetricsUseCase.FindAll(h.ctx, metricusecase.FindAllDTO{})
+	if err != nil {
+		http.Error(res, errorz.ErrMsgFindAllMetrics, http.StatusInternalServerError)
+
+		return
+	}
+	res.Header().Set("Content-Type", "text/html; charset=utf-8")
+	res.WriteHeader(http.StatusOK)
+	if _, err = res.Write([]byte(r.HTML)); err != nil {
+		log.Printf("response body write err: %s", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+		return
+	}
+}
+
+func (h MetricsHandler) GetMetricValue(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+
+		return
 	}
 }

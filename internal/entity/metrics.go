@@ -42,3 +42,9 @@ type MetricDTO struct {
 	Name  string
 	Value string
 }
+
+type Metric struct {
+	Type  string
+	Name  string
+	Value any
+}

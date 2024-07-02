@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
@@ -28,7 +29,7 @@ func TestNewUpdateMetricsHandler(t *testing.T) {
 	tests := []struct {
 		name  string
 		input input
-		want  UpdateMetricsHandler
+		want  MetricsHandler
 	}{
 		{
 			name: "Valid context and use case",
@@ -36,7 +37,7 @@ func TestNewUpdateMetricsHandler(t *testing.T) {
 				ctx: context.Background(),
 				uc:  &MockUseCase{},
 			},
-			want: UpdateMetricsHandler{
+			want: MetricsHandler{
 				ctx:            context.Background(),
 				MetricsUseCase: &MockUseCase{},
 			},
@@ -47,7 +48,7 @@ func TestNewUpdateMetricsHandler(t *testing.T) {
 				ctx: nil,
 				uc:  &MockUseCase{},
 			},
-			want: UpdateMetricsHandler{
+			want: MetricsHandler{
 				ctx:            nil,
 				MetricsUseCase: &MockUseCase{},
 			},
@@ -58,7 +59,7 @@ func TestNewUpdateMetricsHandler(t *testing.T) {
 				ctx: context.Background(),
 				uc:  nil,
 			},
-			want: UpdateMetricsHandler{
+			want: MetricsHandler{
 				ctx:            context.Background(),
 				MetricsUseCase: nil,
 			},
@@ -69,7 +70,7 @@ func TestNewUpdateMetricsHandler(t *testing.T) {
 				ctx: nil,
 				uc:  nil,
 			},
-			want: UpdateMetricsHandler{
+			want: MetricsHandler{
 				ctx:            nil,
 				MetricsUseCase: nil,
 			},
@@ -78,7 +79,7 @@ func TestNewUpdateMetricsHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := NewUpdateMetricsHandler(tt.input.ctx, tt.input.uc)
+			h := NewMetricsHandler(tt.input.ctx, tt.input.uc)
 
 			assert.Equal(t, tt.want.ctx, h.ctx)
 			assert.Equal(t, tt.want.MetricsUseCase, h.MetricsUseCase)
@@ -86,17 +87,17 @@ func TestNewUpdateMetricsHandler(t *testing.T) {
 	}
 }
 
-func (m *MockUseCase) UpdateMetric(_ context.Context, dto entity.MetricDTO) (metricusecase.UpdateMetricResp, error) {
+func (m *MockUseCase) Update(_ context.Context, dto entity.MetricDTO) (metricusecase.UpdateResp, error) {
 	if dto.Type == "invalid" {
 
-		return metricusecase.UpdateMetricResp{}, errors.New(errMsgInvalidMetricType)
+		return metricusecase.UpdateResp{}, errors.New(errMsgInvalidMetricType)
 	}
 	if dto.Value == "invalid" {
 
-		return metricusecase.UpdateMetricResp{}, errors.New(errMsgInvalidMetricValue)
+		return metricusecase.UpdateResp{}, errors.New(errMsgInvalidMetricValue)
 	}
 
-	return metricusecase.UpdateMetricResp{Message: "success"}, nil
+	return metricusecase.UpdateResp{Message: "success"}, nil
 }
 
 func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
@@ -137,7 +138,7 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusMethodNotAllowed,
-				response:    errorz.ErrMsgOnlyPOSTMethodAccept + "\n",
+				response:    errorz.ErrMsgOnlyPOSTMethodAccept,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -149,7 +150,7 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusBadRequest,
-				response:    errMsgInvalidMetricType + "\n",
+				response:    errMsgInvalidMetricType,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -161,7 +162,7 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusBadRequest,
-				response:    errMsgInvalidMetricValue + "\n",
+				response:    errMsgInvalidMetricValue,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -173,7 +174,7 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusNotFound,
-				response:    errorz.ErrMsgEmptyMetricParam + "\n",
+				response:    errorz.ErrMsgEmptyMetricParam,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -183,11 +184,11 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			req := httptest.NewRequest(tt.input.method, tt.input.query, nil)
 			w := httptest.NewRecorder()
 
-			handler := UpdateMetricsHandler{
+			handler := MetricsHandler{
 				ctx:            context.Background(),
 				MetricsUseCase: &MockUseCase{},
 			}
-			handler.ServeHTTP(w, req)
+			handler.UpdateMetric(w, req)
 
 			res := w.Result()
 
@@ -197,7 +198,7 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 			}()
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
-			assert.Equal(t, tt.want.response, string(resBody))
+			assert.Equal(t, tt.want.response, strings.TrimSuffix(string(resBody), "\n"))
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}

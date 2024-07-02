@@ -2,6 +2,7 @@ package somestore
 
 import (
 	"context"
+	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"sync"
 )
 
@@ -35,4 +36,29 @@ func (i *Impl) UpdateCounterMetric(ctx context.Context, arg UpdateCounterMetricP
 	i.s.counters[arg.Name] += arg.Value
 
 	return true, nil
+}
+
+type FindAllMetricsParams struct {
+}
+
+func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]Metric, error) {
+	i.s.mu.Lock()
+	defer i.s.mu.Unlock()
+	var metrics []Metric
+	for n, v := range i.s.gauges {
+		metrics = append(metrics, Metric{
+			Type:  enum.GaugeMetricType,
+			Name:  n,
+			Value: v,
+		})
+	}
+	for n, v := range i.s.counters {
+		metrics = append(metrics, Metric{
+			Type:  enum.CounterMetricType,
+			Name:  n,
+			Value: v,
+		})
+	}
+
+	return metrics, nil
 }

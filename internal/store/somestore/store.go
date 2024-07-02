@@ -7,6 +7,7 @@ import (
 type Store interface {
 	UpdateGaugeMetric(ctx context.Context, arg UpdateGaugeMetricParams) (bool, error)
 	UpdateCounterMetric(ctx context.Context, arg UpdateCounterMetricParams) (bool, error)
+	FindAllMetrics(ctx context.Context, arg FindAllMetricsParams) ([]Metric, error)
 }
 
 type Impl struct {

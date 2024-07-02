@@ -19,3 +19,11 @@ func (dto UpdateCounterDTO) Valid() error {
 
 	return nil
 }
+
+type FindAllDTO somestore.FindAllMetricsParams
+
+func (dto FindAllDTO) Valid() error {
+	// may be later
+
+	return nil
+}

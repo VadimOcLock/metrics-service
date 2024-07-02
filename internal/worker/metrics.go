@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"log"
 	"math/rand"
 	"net/http"
@@ -53,7 +54,8 @@ func (w MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) erro
 }
 
 func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error {
-	client := &http.Client{}
+	//client := &http.Client{}
+	client := resty.New()
 
 	gaugeMetrics := map[string]entity.Gauge{
 		enum.AllocMetricName:         m.Alloc,
@@ -122,32 +124,24 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 }
 
 type sendMetricOpts struct {
-	client        *http.Client
+	client        *resty.Client
 	serverAddress string
 	metric        entity.MetricDTO
 }
 
-func sendMetric(ctx context.Context, opts sendMetricOpts) error {
+func sendMetric(_ context.Context, opts sendMetricOpts) error {
 	metric := opts.metric
 	url := fmt.Sprintf("%s/update/%s/%s/%s", opts.serverAddress, metric.Type, metric.Name, metric.Value)
-	req, err := http.NewRequestWithContext(ctx, "POST", url, nil)
+
+	resp, err := opts.client.R().
+		SetHeader("Content-Type", "text/plain").
+		Post(url)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "text/plain")
 
-	resp, err := opts.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if cErr := resp.Body.Close(); cErr != nil {
-			log.Println(cErr)
-		}
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("Error response from server: %s\n", resp.Status)
+	if resp.StatusCode() != http.StatusOK {
+		log.Printf("Error response from server: %s\n", resp.Status())
 
 		return errorz.ErrSendMetricStatusNotOK
 	}

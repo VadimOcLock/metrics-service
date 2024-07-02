@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
@@ -12,14 +13,22 @@ import (
 
 func New(ctx context.Context) http.Handler {
 	// Использовал chi так как не нашел способа распарсить пустые сегменты без регулярок
-	r := chi.NewRouter()
-
 	store := somestore.New()
 	metricService := metricservice.New(&store)
 	metricUseCase := metricusecase.New(metricService)
-	updateMetricsHandler := NewUpdateMetricsHandler(ctx, metricUseCase)
+	mh := NewMetricsHandler(ctx, metricUseCase)
 
-	r.Post("/update/{type:[^/]*}/{name:[^/]*}/{value:[^/]*}", updateMetricsHandler.ServeHTTP)
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-	return Chain(r, LoggerMiddleware)
+	r.Get("/", mh.GetAllMetrics)
+	r.Route("/update", func(r chi.Router) {
+		r.Post("/{type}/{name}/{value}", mh.UpdateMetric)
+	})
+	r.Route("/value", func(r chi.Router) {
+		r.Get("/{type}/{name}", mh.GetMetricValue)
+	})
+
+	return r
 }

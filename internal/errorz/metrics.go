@@ -14,4 +14,5 @@ var (
 const (
 	ErrMsgOnlyPOSTMethodAccept = "only POST method accept"
 	ErrMsgEmptyMetricParam     = "empty metric param"
+	ErrMsgFindAllMetrics       = "find all metrics error"
 )

@@ -13,12 +13,15 @@ type MetricUseCase struct {
 }
 
 type UseCase interface {
-	UpdateMetric(ctx context.Context, dto entity.MetricDTO) (UpdateMetricResp, error)
+	Update(ctx context.Context, dto entity.MetricDTO) (UpdateResp, error)
+	FindAll(ctx context.Context, dto FindAllDTO) (FindAllResp, error)
+	//Find(ctx context.Context, dto FindDTO) (FindResp, error)
 }
 
 type MetricService interface {
 	UpdateGauge(ctx context.Context, dto metricservice.UpdateGaugeDTO) error
 	UpdateCounter(ctx context.Context, dto metricservice.UpdateCounterDTO) error
+	FindAll(ctx context.Context, dto metricservice.FindAllDTO) ([]entity.Metric, error)
 }
 
 func New(
