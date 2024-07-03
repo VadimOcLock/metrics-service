@@ -2,6 +2,7 @@ package metricusecase
 
 import (
 	"context"
+	"fmt"
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
@@ -43,7 +44,7 @@ func (uc MetricUseCase) Update(ctx context.Context, dto entity.MetricDTO) (Updat
 			return UpdateResp{}, errorz.ErrUpdateMetricFailed
 		}
 	default:
-		return UpdateResp{}, errorz.ErrUnsupportedMetricType
+		return UpdateResp{}, errorz.ErrUndefinedMetricType
 	}
 
 	return UpdateResp{
@@ -63,5 +64,19 @@ func (uc MetricUseCase) FindAll(ctx context.Context, _ FindAllDTO) (FindAllResp,
 
 	return FindAllResp{
 		HTML: html,
+	}, err
+}
+
+func (uc MetricUseCase) Find(ctx context.Context, dto FindDTO) (FindResp, error) {
+	m, err := uc.metricService.Find(ctx, metricservice.FindDTO{
+		MetricType: dto.MetricType,
+		MetricName: dto.MetricName,
+	})
+	if err != nil {
+		return FindResp{}, err
+	}
+
+	return FindResp{
+		MetricValue: fmt.Sprintf("%v", m.Value),
 	}, err
 }

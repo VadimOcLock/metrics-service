@@ -15,7 +15,7 @@ type MetricUseCase struct {
 type UseCase interface {
 	Update(ctx context.Context, dto entity.MetricDTO) (UpdateResp, error)
 	FindAll(ctx context.Context, dto FindAllDTO) (FindAllResp, error)
-	//Find(ctx context.Context, dto FindDTO) (FindResp, error)
+	Find(ctx context.Context, dto FindDTO) (FindResp, error)
 }
 
 type MetricService interface {

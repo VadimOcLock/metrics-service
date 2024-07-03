@@ -1,5 +1,9 @@
 package metricusecase
 
 type FindAllDTO struct {
-	// todo
+}
+
+type FindDTO struct {
+	MetricType string
+	MetricName string
 }

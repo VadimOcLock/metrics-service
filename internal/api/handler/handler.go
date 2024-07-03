@@ -12,7 +12,6 @@ import (
 )
 
 func New(ctx context.Context) http.Handler {
-	// Использовал chi так как не нашел способа распарсить пустые сегменты без регулярок
 	store := somestore.New()
 	metricService := metricservice.New(&store)
 	metricUseCase := metricusecase.New(metricService)

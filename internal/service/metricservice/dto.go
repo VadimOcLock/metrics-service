@@ -27,3 +27,14 @@ func (dto FindAllDTO) Valid() error {
 
 	return nil
 }
+
+type FindDTO struct {
+	MetricType string
+	MetricName string
+}
+
+func (dto FindDTO) Valid() error {
+	// may be later
+
+	return nil
+}

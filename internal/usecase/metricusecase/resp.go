@@ -7,3 +7,7 @@ type UpdateResp struct {
 type FindAllResp struct {
 	HTML string
 }
+
+type FindResp struct {
+	MetricValue string
+}

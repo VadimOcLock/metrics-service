@@ -3,6 +3,7 @@ package somestore
 import (
 	"context"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"sync"
 )
 
@@ -61,4 +62,42 @@ func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]Metr
 	}
 
 	return metrics, nil
+}
+
+type FindCounterMetricParams struct {
+	MetricName string
+}
+
+func (i *Impl) FindCounterMetric(_ context.Context, arg FindCounterMetricParams) (Metric, error) {
+	i.s.mu.Lock()
+	defer i.s.mu.Unlock()
+	metricValue, ok := i.s.counters[arg.MetricName]
+	if !ok {
+		return Metric{}, errorz.ErrUndefinedMetricName
+	}
+
+	return Metric{
+		Type:  enum.CounterMetricType,
+		Name:  arg.MetricName,
+		Value: metricValue,
+	}, nil
+}
+
+type FindGaugeMetricParams struct {
+	MetricName string
+}
+
+func (i *Impl) FindGaugeMetric(_ context.Context, arg FindGaugeMetricParams) (Metric, error) {
+	i.s.mu.Lock()
+	defer i.s.mu.Unlock()
+	metricValue, ok := i.s.gauges[arg.MetricName]
+	if !ok {
+		return Metric{}, errorz.ErrUndefinedMetricName
+	}
+
+	return Metric{
+		Type:  enum.GaugeMetricType,
+		Name:  arg.MetricName,
+		Value: metricValue,
+	}, nil
 }
