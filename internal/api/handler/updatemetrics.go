@@ -107,7 +107,7 @@ func (h MetricsHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 	})
 	if errors.Is(err, errorz.ErrUndefinedMetricType) ||
 		errors.Is(err, errorz.ErrUndefinedMetricName) {
-		http.Error(res, err.Error(), http.StatusBadRequest)
+		http.Error(res, err.Error(), http.StatusNotFound)
 
 		return
 	}

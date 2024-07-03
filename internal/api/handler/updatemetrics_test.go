@@ -17,9 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const errMsgInvalidMetricType = "invalid metric type"
-const errMsgInvalidMetricValue = "invalid metric value"
-
 func TestMetricsHandler_UpdateMetric(t *testing.T) {
 	metricUseCase := mocks.NewUseCase(t)
 	h := NewMetricsHandler(metricUseCase)
@@ -194,7 +191,7 @@ func TestMetricsHandler_GetMetricValue(t *testing.T) {
 				metricName: "metric1",
 			},
 			want: want{
-				statusCode: http.StatusBadRequest,
+				statusCode: http.StatusNotFound,
 			},
 		},
 		{
@@ -206,7 +203,7 @@ func TestMetricsHandler_GetMetricValue(t *testing.T) {
 				metricName: "undefined_name",
 			},
 			want: want{
-				statusCode: http.StatusBadRequest,
+				statusCode: http.StatusNotFound,
 			},
 		},
 		{
