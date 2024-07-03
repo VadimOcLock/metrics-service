@@ -2,6 +2,7 @@ package metricservice
 
 import (
 	"context"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"

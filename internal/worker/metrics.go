@@ -3,11 +3,12 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/go-resty/resty/v2"
 	"log"
 	"math/rand"
 	"net/http"
 	"runtime"
+
+	"github.com/go-resty/resty/v2"
 
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 

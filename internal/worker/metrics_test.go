@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-resty/resty/v2"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
@@ -72,7 +74,7 @@ func Test_sendMetric(t *testing.T) {
 			}
 
 			opts := sendMetricOpts{
-				client:        server.Client(),
+				client:        resty.New(),
 				serverAddress: serverAddress,
 				metric:        tt.metric,
 			}

@@ -17,6 +17,8 @@ github.com/safeblock-dev/werr v0.0.8 h1:Z+bYf/CrbbaIZGjv+HnmAiBjdChjIIF1/O07dXL0
 github.com/safeblock-dev/werr v0.0.8/go.mod h1:hdfxXR/4W3bryKiQ4xcoF1MSRDf5WNAFh0usY+oVtkk=
 github.com/safeblock-dev/wr v0.1.0 h1:h3f/lYVi/7FKa9ZDDJppVKzJeBzsoVxgMcNzY/UkDnY=
 github.com/safeblock-dev/wr v0.1.0/go.mod h1:16cWVa/RYGrdnUy8kigQfB5KVW2R4uewnpBuJfFQ9ns=
+github.com/stretchr/objx v0.5.2 h1:xuMeJ0Sdp5ZMRXx/aWO6RZxdr3beISkG5/G/aIRr3pY=
+github.com/stretchr/objx v0.5.2/go.mod h1:FRsXN1f5AsAjCGJKqEizvkpNtU+EGNCLh3NxZ/8L+MA=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=

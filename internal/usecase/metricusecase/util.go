@@ -2,9 +2,10 @@ package metricusecase
 
 import (
 	"bytes"
-	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"html/template"
 	"sort"
+
+	"github.com/VadimOcLock/metrics-service/internal/entity"
 )
 
 func buildHTML(metrics []entity.Metric) (string, error) {
@@ -67,6 +68,7 @@ func sortMetrics(metrics *[]entity.Metric) {
 		if (*metrics)[i].Type == (*metrics)[j].Type {
 			return (*metrics)[i].Name < (*metrics)[j].Name
 		}
+
 		return (*metrics)[i].Type < (*metrics)[j].Type
 	})
 }

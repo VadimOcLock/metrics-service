@@ -3,11 +3,12 @@ package metricusecase
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
-	"strconv"
 )
 
 func (uc MetricUseCase) Update(ctx context.Context, dto entity.MetricDTO) (UpdateResp, error) {

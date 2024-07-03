@@ -1,30 +1,27 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
-	"github.com/VadimOcLock/metrics-service/internal/errorz"
-	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 )
 
 type MetricsHandler struct {
-	ctx            context.Context
 	MetricsUseCase metricusecase.UseCase
 }
 
 func NewMetricsHandler(
-	ctx context.Context,
 	uc metricusecase.UseCase,
 ) MetricsHandler {
 
 	return MetricsHandler{
-		ctx:            ctx,
 		MetricsUseCase: uc,
 	}
 }
@@ -45,7 +42,7 @@ func (h MetricsHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 
 		return
 	}
-	bodyObj, err := h.MetricsUseCase.Update(h.ctx, dto)
+	bodyObj, err := h.MetricsUseCase.Update(req.Context(), dto)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
@@ -74,7 +71,7 @@ func (h MetricsHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request
 
 		return
 	}
-	r, err := h.MetricsUseCase.FindAll(h.ctx, metricusecase.FindAllDTO{})
+	r, err := h.MetricsUseCase.FindAll(req.Context(), metricusecase.FindAllDTO{})
 	if err != nil {
 		log.Printf("find all metrics err: %s", err)
 		http.Error(res, errorz.ErrMsgFindAllMetrics, http.StatusInternalServerError)
@@ -104,7 +101,7 @@ func (h MetricsHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 
 		return
 	}
-	find, err := h.MetricsUseCase.Find(h.ctx, metricusecase.FindDTO{
+	find, err := h.MetricsUseCase.Find(req.Context(), metricusecase.FindDTO{
 		MetricType: metricType,
 		MetricName: metricName,
 	})

@@ -2,9 +2,10 @@ package somestore
 
 import (
 	"context"
+	"sync"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
-	"sync"
 )
 
 type MemStorage struct {

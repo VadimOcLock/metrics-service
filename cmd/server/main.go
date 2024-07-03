@@ -15,7 +15,7 @@ func main() {
 	ctx := context.Background()
 	addr := "localhost:8080"
 
-	mux := handler.New(ctx)
+	mux := handler.New()
 	server := &http.Server{
 		Addr:    addr,
 		Handler: mux,

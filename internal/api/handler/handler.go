@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"context"
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
+
+	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
@@ -11,11 +11,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func New(ctx context.Context) http.Handler {
+func New() http.Handler {
 	store := somestore.New()
 	metricService := metricservice.New(&store)
 	metricUseCase := metricusecase.New(metricService)
-	mh := NewMetricsHandler(ctx, metricUseCase)
+	mh := NewMetricsHandler(metricUseCase)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

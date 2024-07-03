@@ -6,110 +6,35 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
+	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase/mocks"
+	"github.com/go-chi/chi/v5"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const errMsgInvalidMetricType = "invalid metric type"
 const errMsgInvalidMetricValue = "invalid metric value"
 
-type MockUseCase struct{}
+func TestMetricsHandler_UpdateMetric(t *testing.T) {
+	metricUseCase := mocks.NewUseCase(t)
+	h := NewMetricsHandler(metricUseCase)
 
-func TestNewUpdateMetricsHandler(t *testing.T) {
-	type input struct {
-		ctx context.Context
-		uc  metricusecase.UseCase
-	}
-	tests := []struct {
-		name  string
-		input input
-		want  MetricsHandler
-	}{
-		{
-			name: "Valid context and use case",
-			input: input{
-				ctx: context.Background(),
-				uc:  &MockUseCase{},
-			},
-			want: MetricsHandler{
-				ctx:            context.Background(),
-				MetricsUseCase: &MockUseCase{},
-			},
-		},
-		{
-			name: "Nil context",
-			input: input{
-				ctx: nil,
-				uc:  &MockUseCase{},
-			},
-			want: MetricsHandler{
-				ctx:            nil,
-				MetricsUseCase: &MockUseCase{},
-			},
-		},
-		{
-			name: "Nil use case",
-			input: input{
-				ctx: context.Background(),
-				uc:  nil,
-			},
-			want: MetricsHandler{
-				ctx:            context.Background(),
-				MetricsUseCase: nil,
-			},
-		},
-		{
-			name: "Both context and use case nil",
-			input: input{
-				ctx: nil,
-				uc:  nil,
-			},
-			want: MetricsHandler{
-				ctx:            nil,
-				MetricsUseCase: nil,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			h := NewMetricsHandler(tt.input.ctx, tt.input.uc)
-
-			assert.Equal(t, tt.want.ctx, h.ctx)
-			assert.Equal(t, tt.want.MetricsUseCase, h.MetricsUseCase)
-		})
-	}
-}
-
-func (m *MockUseCase) Update(_ context.Context, dto entity.MetricDTO) (metricusecase.UpdateResp, error) {
-	if dto.Type == "invalid" {
-
-		return metricusecase.UpdateResp{}, errors.New(errMsgInvalidMetricType)
-	}
-	if dto.Value == "invalid" {
-
-		return metricusecase.UpdateResp{}, errors.New(errMsgInvalidMetricValue)
-	}
-
-	return metricusecase.UpdateResp{Message: "success"}, nil
-}
-
-func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 	type (
 		input struct {
-			method string
-			query  string
+			method      string
+			query       string
+			metricType  string
+			metricName  string
+			metricValue string
 		}
 		want struct {
-			code        int
-			response    string
-			contentType string
+			statusCode int
+			response   string
 		}
 	)
 
@@ -119,87 +44,333 @@ func TestUpdateMetricsHandler_ServeHTTP(t *testing.T) {
 		want  want
 	}{
 		{
-			name: "correct input params",
-			input: input{
-				method: http.MethodPost,
-				query:  "/update/valid_type/valid_name/valid_value",
-			},
-			want: want{
-				code:        http.StatusOK,
-				response:    `{"message":"success"}`,
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "invalid HTTP method",
+			name: "non POST method",
 			input: input{
 				method: http.MethodGet,
-				query:  "/update/valid_type/valid_name/valid_value",
+				query:  "/update/gauge/metric1/value",
 			},
 			want: want{
-				code:        http.StatusMethodNotAllowed,
-				response:    errorz.ErrMsgOnlyPOSTMethodAccept,
-				contentType: "text/plain; charset=utf-8",
+				statusCode: http.StatusMethodNotAllowed,
 			},
 		},
 		{
-			name: "invalid input metric type",
+			name: "missing parameters",
 			input: input{
 				method: http.MethodPost,
-				query:  "/update/invalid/valid_name/valid_value",
+				query:  "/update/",
 			},
 			want: want{
-				code:        http.StatusBadRequest,
-				response:    errMsgInvalidMetricType,
-				contentType: "text/plain; charset=utf-8",
+				statusCode: http.StatusNotFound,
 			},
 		},
 		{
-			name: "invalid input metric value",
+			name: "undefined metric type",
 			input: input{
-				method: http.MethodPost,
-				query:  "/update/valid_type/valid_name/invalid",
+				method:      http.MethodPost,
+				query:       "/update/undefined_type/metric1/123.45",
+				metricType:  "undefined_type",
+				metricName:  "metric1",
+				metricValue: "123.45",
 			},
 			want: want{
-				code:        http.StatusBadRequest,
-				response:    errMsgInvalidMetricValue,
-				contentType: "text/plain; charset=utf-8",
+				statusCode: http.StatusBadRequest,
 			},
 		},
 		{
-			name: "empty input metric name",
+			name: "successful metric update",
 			input: input{
-				method: http.MethodPost,
-				query:  "/update//valid_name/valid_value",
+				method:      http.MethodPost,
+				query:       "/update/gauge/metric1/123.45",
+				metricType:  "gauge",
+				metricName:  "metric1",
+				metricValue: "123.45",
 			},
 			want: want{
-				code:        http.StatusNotFound,
-				response:    errorz.ErrMsgEmptyMetricParam,
-				contentType: "text/plain; charset=utf-8",
+				statusCode: http.StatusOK,
+				response:   `{"message":"Metric updated successfully"}`,
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.input.method, tt.input.query, nil)
+			metricUseCase.ExpectedCalls = nil
+			metricUseCase.Calls = nil
+
+			r := httptest.NewRequest(tt.input.method, tt.input.query, nil)
+			ctx := chi.NewRouteContext()
+			ctx.URLParams.Add("type", tt.input.metricType)
+			ctx.URLParams.Add("name", tt.input.metricName)
+			ctx.URLParams.Add("value", tt.input.metricValue)
+			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
+
 			w := httptest.NewRecorder()
 
-			handler := MetricsHandler{
-				ctx:            context.Background(),
-				MetricsUseCase: &MockUseCase{},
+			switch tt.name {
+			case "undefined metric type":
+				metricUseCase.On("Update", r.Context(), entity.MetricDTO{
+					Type:  "undefined_type",
+					Name:  "metric1",
+					Value: "123.45",
+				}).Return(metricusecase.UpdateResp{}, errorz.ErrUndefinedMetricType)
+			case "undefined metric name":
+				metricUseCase.On("Update", r.Context(), entity.MetricDTO{
+					Type:  "gauge",
+					Name:  "undefined_name",
+					Value: "123.45",
+				}).Return(metricusecase.UpdateResp{}, errorz.ErrUndefinedMetricName)
+			case "successful metric update":
+				metricUseCase.On("Update", r.Context(), entity.MetricDTO{
+					Type:  "gauge",
+					Name:  "metric1",
+					Value: "123.45",
+				}).Return(metricusecase.UpdateResp{
+					Message: "Metric updated successfully",
+				}, nil)
 			}
-			handler.UpdateMetric(w, req)
 
+			h.UpdateMetric(w, r)
 			res := w.Result()
+			assert.Equal(t, tt.want.statusCode, res.StatusCode)
+			if tt.want.response != "" {
+				body, _ := io.ReadAll(res.Body)
+				defer func() {
+					_ = res.Body.Close()
+				}()
+				assert.Equal(t, tt.want.response, string(body))
+			}
+		})
+	}
+}
 
-			assert.Equal(t, tt.want.code, res.StatusCode)
-			defer func() {
-				_ = res.Body.Close()
-			}()
-			resBody, err := io.ReadAll(res.Body)
-			require.NoError(t, err)
-			assert.Equal(t, tt.want.response, strings.TrimSuffix(string(resBody), "\n"))
-			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
+func TestMetricsHandler_GetMetricValue(t *testing.T) {
+	metricUseCase := mocks.NewUseCase(t)
+	h := NewMetricsHandler(metricUseCase)
+
+	type (
+		input struct {
+			method     string
+			query      string
+			metricType string
+			metricName string
+		}
+		want struct {
+			statusCode int
+			response   string
+		}
+	)
+
+	tests := []struct {
+		name  string
+		input input
+		want  want
+	}{
+		{
+			name: "non GET method",
+			input: input{
+				method: http.MethodPost,
+				query:  "/value/",
+			},
+			want: want{
+				statusCode: http.StatusMethodNotAllowed,
+			},
+		},
+		{
+			name: "missing parameters",
+			input: input{
+				method: http.MethodGet,
+				query:  "/value/",
+			},
+			want: want{
+				statusCode: http.StatusNotFound,
+			},
+		},
+		{
+			name: "undefined metric type",
+			input: input{
+				method:     http.MethodGet,
+				query:      "/value/undefined_type/metric1",
+				metricType: "undefined_type",
+				metricName: "metric1",
+			},
+			want: want{
+				statusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			name: "undefined metric name",
+			input: input{
+				method:     http.MethodGet,
+				query:      "/value/gauge/undefined_name",
+				metricType: "gauge",
+				metricName: "undefined_name",
+			},
+			want: want{
+				statusCode: http.StatusBadRequest,
+			},
+		},
+		{
+			name: "successful metric retrieval",
+			input: input{
+				method:     http.MethodGet,
+				query:      "/value/gauge/metric1",
+				metricType: "gauge",
+				metricName: "metric1",
+			},
+			want: want{
+				statusCode: http.StatusOK,
+				response:   "123.45",
+			},
+		},
+		{
+			name: "internal server error",
+			input: input{
+				method:     http.MethodGet,
+				query:      "/value/gauge/metric1",
+				metricType: "gauge",
+				metricName: "metric1",
+			},
+			want: want{
+				statusCode: http.StatusInternalServerError,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			metricUseCase.ExpectedCalls = nil
+			metricUseCase.Calls = nil
+
+			r := httptest.NewRequest(tt.input.method, tt.input.query, nil)
+			ctx := chi.NewRouteContext()
+			ctx.URLParams.Add("type", tt.input.metricType)
+			ctx.URLParams.Add("name", tt.input.metricName)
+			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
+
+			w := httptest.NewRecorder()
+
+			switch tt.name {
+			case "undefined metric type":
+				metricUseCase.On("Find", r.Context(), metricusecase.FindDTO{
+					MetricType: "undefined_type",
+					MetricName: "metric1",
+				}).Return(metricusecase.FindResp{}, errorz.ErrUndefinedMetricType)
+			case "undefined metric name":
+				metricUseCase.On("Find", r.Context(), metricusecase.FindDTO{
+					MetricType: "gauge",
+					MetricName: "undefined_name",
+				}).Return(metricusecase.FindResp{}, errorz.ErrUndefinedMetricName)
+			case "internal server error":
+				metricUseCase.On("Find", r.Context(), metricusecase.FindDTO{
+					MetricType: "gauge",
+					MetricName: "metric1",
+				}).Return(metricusecase.FindResp{}, errors.New("some error"))
+			case "successful metric retrieval":
+				metricUseCase.On("Find", r.Context(), metricusecase.FindDTO{
+					MetricType: "gauge",
+					MetricName: "metric1",
+				}).Return(metricusecase.FindResp{
+					MetricValue: "123.45",
+				}, nil)
+			}
+
+			h.GetMetricValue(w, r)
+			res := w.Result()
+			assert.Equal(t, tt.want.statusCode, res.StatusCode)
+			if tt.want.response != "" {
+				body, _ := io.ReadAll(res.Body)
+				defer func() {
+					_ = res.Body.Close()
+				}()
+				assert.Equal(t, tt.want.response, string(body))
+			}
+		})
+	}
+}
+
+func TestMetricsHandler_GetAllMetrics(t *testing.T) {
+	metricUseCase := mocks.NewUseCase(t)
+	h := NewMetricsHandler(metricUseCase)
+
+	type (
+		input struct {
+			method string
+			query  string
+		}
+		want struct {
+			statusCode int
+			response   string
+		}
+	)
+
+	tests := []struct {
+		name  string
+		input input
+		want  want
+	}{
+		{
+			name: "non GET method",
+			input: input{
+				method: http.MethodPost,
+				query:  "/",
+			},
+			want: want{
+				statusCode: http.StatusMethodNotAllowed,
+			},
+		},
+
+		{
+			name: "successful get all metrics",
+			input: input{
+				method: http.MethodGet,
+				query:  "/",
+			},
+			want: want{
+				statusCode: http.StatusOK,
+				response:   "<html>success</html>",
+			},
+		},
+		{
+			name: "internal server error",
+			input: input{
+				method: http.MethodGet,
+				query:  "/",
+			},
+			want: want{
+				statusCode: http.StatusInternalServerError,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			metricUseCase.ExpectedCalls = nil
+			metricUseCase.Calls = nil
+
+			r := httptest.NewRequest(tt.input.method, tt.input.query, nil)
+			w := httptest.NewRecorder()
+
+			switch tt.name {
+			case "successful get all metrics":
+				metricUseCase.On("FindAll", r.Context(), metricusecase.FindAllDTO{}).
+					Return(metricusecase.FindAllResp{
+						HTML: "<html>success</html>",
+					}, nil)
+			case "internal server error":
+				metricUseCase.On("FindAll", r.Context(), metricusecase.FindAllDTO{}).
+					Return(metricusecase.FindAllResp{}, errors.New("some error"))
+			}
+
+			h.GetAllMetrics(w, r)
+			res := w.Result()
+			assert.Equal(t, tt.want.statusCode, res.StatusCode)
+			if tt.want.response != "" {
+				body, _ := io.ReadAll(res.Body)
+				defer func() {
+					_ = res.Body.Close()
+				}()
+				assert.Equal(t, tt.want.response, string(body))
+			}
 		})
 	}
 }
