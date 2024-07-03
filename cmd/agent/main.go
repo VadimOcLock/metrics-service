@@ -13,12 +13,12 @@ import (
 
 func main() {
 	ctx := context.Background()
-	srvAddr := "http://localhost:8080"
+	parseFlags()
 
 	w := worker.NewMetricsWorker(worker.MetricsWorkerOpts{
-		ServerAddr:     srvAddr,
-		PoolInterval:   2 * time.Second,
-		ReportInterval: 10 * time.Second,
+		ServerAddr:     flagRunAddr,
+		PoolInterval:   time.Duration(flagPoolInterval) * time.Second,
+		ReportInterval: time.Duration(flagReportInterval) * time.Second,
 	})
 
 	tasks := taskgroup.New()

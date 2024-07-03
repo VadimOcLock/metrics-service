@@ -13,11 +13,11 @@ import (
 
 func main() {
 	ctx := context.Background()
-	addr := "localhost:8080"
+	parseFlags()
 
 	mux := handler.New()
 	server := &http.Server{
-		Addr:    addr,
+		Addr:    flagRunAddr,
 		Handler: mux,
 	}
 
