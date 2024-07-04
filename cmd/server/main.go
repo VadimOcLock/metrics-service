@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"syscall"
+
+	"github.com/VadimOcLock/metrics-service/internal/config"
 
 	"github.com/VadimOcLock/metrics-service/internal/api/handler"
 	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
@@ -13,11 +16,19 @@ import (
 
 func main() {
 	ctx := context.Background()
-	parseFlags()
+	cfg, err := config.Load[config.WebServer]()
+	if err != nil {
+		log.Println("cfg load err: ", err)
+		os.Exit(1)
+	}
+	if err = parseFlags(&cfg); err != nil {
+		log.Println("parse flags err: ", err)
+		os.Exit(1)
+	}
 
 	mux := handler.New()
 	server := &http.Server{
-		Addr:    flagOpts.SrvAddr.String(),
+		Addr:    cfg.WebServerConfig.SrvAddr,
 		Handler: mux,
 	}
 

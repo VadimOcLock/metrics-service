@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"syscall"
+	"time"
+
+	"github.com/VadimOcLock/metrics-service/internal/config"
 
 	"github.com/VadimOcLock/metrics-service/internal/worker"
 	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
@@ -12,12 +16,21 @@ import (
 
 func main() {
 	ctx := context.Background()
-	parseFlags()
+
+	cfg, err := config.Load[config.Agent]()
+	if err != nil {
+		log.Println("cfg load err: ", err)
+		os.Exit(1)
+	}
+	if err = parseFlags(&cfg); err != nil {
+		log.Println("parse flags err: ", err)
+		os.Exit(1)
+	}
 
 	w := worker.NewMetricsWorker(worker.MetricsWorkerOpts{
-		ServerAddr:     flagOpts.EndpointAddr.String(),
-		PoolInterval:   flagOpts.PoolInterval,
-		ReportInterval: flagOpts.ReportInterval,
+		ServerAddr:     HTTPProtocolName + "://" + cfg.EndpointAddr,
+		PoolInterval:   time.Duration(cfg.AgentConfig.PoolInterval) * time.Second,
+		ReportInterval: time.Duration(cfg.AgentConfig.ReportInterval) * time.Second,
 	})
 
 	tasks := taskgroup.New()

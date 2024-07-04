@@ -6,17 +6,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/VadimOcLock/metrics-service/internal/config"
 )
+
+const defaultSrvAddr = "localhost:8080"
 
 var (
-	flagEndpointAddr string
-
-	flagOpts FlagOpts
+	flagSrvAddr string
 )
-
-type FlagOpts struct {
-	SrvAddr netAddress
-}
 
 type netAddress struct {
 	Host string
@@ -42,18 +40,19 @@ func (n *netAddress) Set(value string) error {
 	return nil
 }
 
-func parseFlags() {
-	flag.StringVar(&flagEndpointAddr, "a", "localhost:8080", "server addr host and port")
+func parseFlags(cfg *config.WebServer) error {
+	flag.StringVar(&flagSrvAddr, "a", defaultSrvAddr, "server addr host and port")
 
 	flag.Parse()
 
-	var endpointAddr netAddress
-	if err := endpointAddr.Set(flagEndpointAddr); err != nil {
-		fmt.Printf("Error parsing endpoint address: %v\n", err)
-		os.Exit(1)
+	var srvAddr netAddress
+	if err := srvAddr.Set(flagSrvAddr); err != nil {
+		return fmt.Errorf("error parsing server address: %v", err)
 	}
 
-	flagOpts = FlagOpts{
-		SrvAddr: endpointAddr,
+	if envVal := os.Getenv("ADDRESS"); envVal == "" {
+		cfg.WebServerConfig.SrvAddr = srvAddr.String()
 	}
+
+	return nil
 }
