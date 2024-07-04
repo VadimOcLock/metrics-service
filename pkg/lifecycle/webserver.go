@@ -14,7 +14,7 @@ const httpServerShutdownTTL = 10 * time.Second
 
 func HTTPServer(server *http.Server) (taskgroup.ExecuteFn, taskgroup.InterruptFn) {
 	execute := func() error {
-		log.Println("HTTP server starting...")
+		log.Printf("HTTP server starting at addr: %s...", server.Addr)
 		err := server.ListenAndServe()
 		if errors.Is(err, http.ErrServerClosed) {
 			err = nil
@@ -26,8 +26,10 @@ func HTTPServer(server *http.Server) (taskgroup.ExecuteFn, taskgroup.InterruptFn
 	interrupt := func(_ error) {
 		ctx, cancel := context.WithTimeout(context.Background(), httpServerShutdownTTL)
 		defer cancel()
-		err := server.Shutdown(ctx)
-		log.Println("HTTP server shutdown complete, err: ", err)
+		if err := server.Shutdown(ctx); err != nil {
+			log.Println("shutdown server err: ", err)
+		}
+		log.Println("HTTP server shutdown complete")
 	}
 
 	return execute, interrupt

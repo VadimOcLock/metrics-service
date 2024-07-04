@@ -17,7 +17,7 @@ func main() {
 
 	mux := handler.New()
 	server := &http.Server{
-		Addr:    flagRunAddr,
+		Addr:    flagOpts.SrvAddr.String(),
 		Handler: mux,
 	}
 

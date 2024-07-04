@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"syscall"
-	"time"
 
 	"github.com/VadimOcLock/metrics-service/internal/worker"
 	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
@@ -16,9 +15,9 @@ func main() {
 	parseFlags()
 
 	w := worker.NewMetricsWorker(worker.MetricsWorkerOpts{
-		ServerAddr:     flagRunAddr,
-		PoolInterval:   time.Duration(flagPoolInterval) * time.Second,
-		ReportInterval: time.Duration(flagReportInterval) * time.Second,
+		ServerAddr:     flagOpts.EndpointAddr.String(),
+		PoolInterval:   flagOpts.PoolInterval,
+		ReportInterval: flagOpts.ReportInterval,
 	})
 
 	tasks := taskgroup.New()
