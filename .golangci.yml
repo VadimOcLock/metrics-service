@@ -1,0 +1,31 @@
+# Refer to golangci-lint's example config file for more options and information:
+# https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters-settings:
+  revive:
+    rules:
+      - name: var-naming
+        arguments:
+          - [ "ID" ] # AllowList
+          - [ ]    # DenyList
+          - - skipPackageNameChecks: true # waiting release, https://github.com/mgechev/revive/pull/941/files
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - goimports
+    - revive
+    - govet
+    - staticcheck
+    - noctx
+    - nlreturn
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
