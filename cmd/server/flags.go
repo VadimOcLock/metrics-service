@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -11,10 +12,6 @@ import (
 )
 
 const defaultSrvAddr = "localhost:8080"
-
-var (
-	flagSrvAddr string
-)
 
 type netAddress struct {
 	Host string
@@ -28,11 +25,11 @@ func (n *netAddress) String() string {
 func (n *netAddress) Set(value string) error {
 	parts := strings.Split(value, ":")
 	if len(parts) != 2 {
-		return fmt.Errorf("invalid address format, expected host:port")
+		return errors.New("invalid address format, expected host:port")
 	}
 	port, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return fmt.Errorf("invalid port: %v", err)
+		return fmt.Errorf("invalid port: %w", err)
 	}
 	n.Host = parts[0]
 	n.Port = port
@@ -41,13 +38,15 @@ func (n *netAddress) Set(value string) error {
 }
 
 func parseFlags(cfg *config.WebServer) error {
+	var flagSrvAddr string
+
 	flag.StringVar(&flagSrvAddr, "a", defaultSrvAddr, "server addr host and port")
 
 	flag.Parse()
 
 	var srvAddr netAddress
 	if err := srvAddr.Set(flagSrvAddr); err != nil {
-		return fmt.Errorf("error parsing server address: %v", err)
+		return fmt.Errorf("error parsing server address: %w", err)
 	}
 
 	if envVal := os.Getenv("ADDRESS"); envVal == "" {

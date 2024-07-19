@@ -10,7 +10,7 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
 )
 
-func (s Service) UpdateGauge(ctx context.Context, dto UpdateGaugeDTO) error {
+func (s *Service) UpdateGauge(ctx context.Context, dto UpdateGaugeDTO) error {
 	if err := dto.Valid(); err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func (s Service) UpdateGauge(ctx context.Context, dto UpdateGaugeDTO) error {
 	return err
 }
 
-func (s Service) UpdateCounter(ctx context.Context, dto UpdateCounterDTO) error {
+func (s *Service) UpdateCounter(ctx context.Context, dto UpdateCounterDTO) error {
 	if err := dto.Valid(); err != nil {
 		return err
 	}
@@ -34,23 +34,19 @@ func (s Service) UpdateCounter(ctx context.Context, dto UpdateCounterDTO) error 
 	return err
 }
 
-func (s Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metric, error) {
+func (s *Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metric, error) {
 	if err := dto.Valid(); err != nil {
 		return nil, err
 	}
-	mm, err := s.Store.FindAllMetrics(ctx, somestore.FindAllMetricsParams{})
+	res, err := s.Store.FindAllMetrics(ctx, somestore.FindAllMetricsParams{})
 	if err != nil {
 		return nil, err
-	}
-	res := make([]entity.Metric, len(mm))
-	for i, m := range mm {
-		res[i] = m.Entity()
 	}
 
 	return res, nil
 }
 
-func (s Service) Find(ctx context.Context, dto FindDTO) (entity.Metric, error) {
+func (s *Service) Find(ctx context.Context, dto FindDTO) (entity.Metric, error) {
 	if err := dto.Valid(); err != nil {
 		return entity.Metric{}, err
 	}
@@ -63,7 +59,7 @@ func (s Service) Find(ctx context.Context, dto FindDTO) (entity.Metric, error) {
 		if err != nil {
 			return entity.Metric{}, err
 		}
-		m = sm.Entity()
+		m = sm
 	case enum.CounterMetricType:
 		sm, err := s.Store.FindCounterMetric(ctx, somestore.FindCounterMetricParams{
 			MetricName: dto.MetricName,
@@ -71,7 +67,7 @@ func (s Service) Find(ctx context.Context, dto FindDTO) (entity.Metric, error) {
 		if err != nil {
 			return entity.Metric{}, err
 		}
-		m = sm.Entity()
+		m = sm
 	default:
 
 		return entity.Metric{}, errorz.ErrUndefinedMetricType

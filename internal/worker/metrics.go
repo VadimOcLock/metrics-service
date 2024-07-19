@@ -2,9 +2,10 @@ package worker
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"log"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"runtime"
 
@@ -49,13 +50,20 @@ func (w MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) erro
 	m.TotalAlloc = entity.Gauge(memStats.TotalAlloc)
 
 	m.PollCount++
-	m.RandomValue = entity.Gauge(rand.Float64())
+
+	maxInt := big.NewInt(1000000)
+	randomInt, err := rand.Int(rand.Reader, maxInt)
+	if err != nil {
+		return fmt.Errorf("collectMetrics: %w", err)
+	}
+	bigFloat := new(big.Float).Quo(new(big.Float).SetInt(randomInt), big.NewFloat(10000))
+	randVal, _ := bigFloat.Float64()
+	m.RandomValue = entity.Gauge(randVal)
 
 	return nil
 }
 
 func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error {
-	//client := &http.Client{}
 	client := resty.New()
 
 	gaugeMetrics := map[string]entity.Gauge{
@@ -98,10 +106,10 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 			Name:  name,
 			Value: fmt.Sprintf("%v", value),
 		}
-		if err := sendMetric(ctx, sendMetricOpts{
-			client:        client,
-			serverAddress: w.Opts.ServerAddr,
-			metric:        metric,
+		if err := SendMetric(ctx, SendMetricOpts{
+			Client:        client,
+			ServerAddress: w.Opts.ServerAddr,
+			Metric:        metric,
 		}); err != nil {
 			return err
 		}
@@ -112,10 +120,10 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 			Name:  name,
 			Value: fmt.Sprintf("%v", value),
 		}
-		if err := sendMetric(ctx, sendMetricOpts{
-			client:        client,
-			serverAddress: w.Opts.ServerAddr,
-			metric:        metric,
+		if err := SendMetric(ctx, SendMetricOpts{
+			Client:        client,
+			ServerAddress: w.Opts.ServerAddr,
+			Metric:        metric,
 		}); err != nil {
 			return err
 		}
@@ -124,17 +132,17 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 	return nil
 }
 
-type sendMetricOpts struct {
-	client        *resty.Client
-	serverAddress string
-	metric        entity.MetricDTO
+type SendMetricOpts struct {
+	Client        *resty.Client
+	ServerAddress string
+	Metric        entity.MetricDTO
 }
 
-func sendMetric(_ context.Context, opts sendMetricOpts) error {
-	metric := opts.metric
-	url := fmt.Sprintf("%s/update/%s/%s/%s", opts.serverAddress, metric.Type, metric.Name, metric.Value)
+func SendMetric(_ context.Context, opts SendMetricOpts) error {
+	metric := opts.Metric
+	url := fmt.Sprintf("%s/update/%s/%s/%s", opts.ServerAddress, metric.Type, metric.Name, metric.Value)
 
-	resp, err := opts.client.R().
+	resp, err := opts.Client.R().
 		SetHeader("Content-Type", "text/plain").
 		Post(url)
 	if err != nil {

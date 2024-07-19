@@ -1,4 +1,4 @@
-package handler
+package metrichandler
 
 import (
 	"net/http"
@@ -14,8 +14,8 @@ import (
 func New() http.Handler {
 	store := somestore.New()
 	metricService := metricservice.New(&store)
-	metricUseCase := metricusecase.New(metricService)
-	mh := NewMetricsHandler(metricUseCase)
+	metricUseCase := metricusecase.New(&metricService)
+	mh := NewMetricHandler(&metricUseCase)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

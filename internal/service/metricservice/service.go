@@ -1,12 +1,10 @@
 package metricservice
 
-import "github.com/VadimOcLock/metrics-service/internal/store/somestore"
-
 type Service struct {
-	Store somestore.Store
+	Store Store
 }
 
-func New(s somestore.Store) Service {
+func New(s Store) Service {
 	return Service{
 		Store: s,
 	}

@@ -1,32 +1,16 @@
 package metricusecase
 
-import (
-	"context"
-
-	"github.com/VadimOcLock/metrics-service/internal/entity"
-
-	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
-)
+import "github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 
 type MetricUseCase struct {
-	metricService metricservice.Service
+	metricService MetricService
 }
 
-type UseCase interface {
-	Update(ctx context.Context, dto entity.MetricDTO) (UpdateResp, error)
-	FindAll(ctx context.Context, dto FindAllDTO) (FindAllResp, error)
-	Find(ctx context.Context, dto FindDTO) (FindResp, error)
-}
-
-type MetricService interface {
-	UpdateGauge(ctx context.Context, dto metricservice.UpdateGaugeDTO) error
-	UpdateCounter(ctx context.Context, dto metricservice.UpdateCounterDTO) error
-	FindAll(ctx context.Context, dto metricservice.FindAllDTO) ([]entity.Metric, error)
-}
+var _ MetricService = (*metricservice.Service)(nil)
 
 func New(
-	metricService metricservice.Service,
-) UseCase {
+	metricService MetricService,
+) MetricUseCase {
 	return MetricUseCase{
 		metricService: metricService,
 	}

@@ -1,4 +1,4 @@
-package worker
+package worker_test
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/VadimOcLock/metrics-service/internal/worker"
 
 	"github.com/go-resty/resty/v2"
 
@@ -15,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Не понимаю как можно протестировать это без моков
 func Test_sendMetric(t *testing.T) {
 	type want struct {
 		errWait bool
@@ -51,21 +52,7 @@ func Test_sendMetric(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodPost {
-					http.Error(w, errorz.ErrMsgOnlyPOSTMethodAccept, http.StatusMethodNotAllowed)
-
-					return
-				}
-				parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/update/"), "/")
-				for _, part := range parts {
-					if part == "" {
-						http.Error(w, errorz.ErrMsgEmptyMetricParam, http.StatusNotFound)
-
-						return
-					}
-				}
-			}))
+			server := setupTestServer()
 			defer server.Close()
 
 			serverAddress := server.URL
@@ -73,19 +60,36 @@ func Test_sendMetric(t *testing.T) {
 				serverAddress = "http://invalid-url"
 			}
 
-			opts := sendMetricOpts{
-				client:        resty.New(),
-				serverAddress: serverAddress,
-				metric:        tt.metric,
+			opts := worker.SendMetricOpts{
+				Client:        resty.New(),
+				ServerAddress: serverAddress,
+				Metric:        tt.metric,
 			}
 
-			err := sendMetric(context.Background(), opts)
+			err := worker.SendMetric(context.Background(), opts)
 			if tt.want.errWait {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
-
 		})
 	}
+}
+
+func setupTestServer() *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, errorz.ErrMsgOnlyPOSTMethodAccept, http.StatusMethodNotAllowed)
+
+			return
+		}
+		parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/update/"), "/")
+		for _, part := range parts {
+			if part == "" {
+				http.Error(w, errorz.ErrMsgEmptyMetricParam, http.StatusNotFound)
+
+				return
+			}
+		}
+	}))
 }

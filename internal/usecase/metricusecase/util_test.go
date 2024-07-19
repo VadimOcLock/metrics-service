@@ -1,7 +1,9 @@
-package metricusecase
+package metricusecase_test
 
 import (
 	"testing"
+
+	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +61,7 @@ func Test_sortMetrics(t *testing.T) {
 			inputCopy := make([]entity.Metric, len(tt.input))
 			copy(inputCopy, tt.input)
 
-			sortMetrics(&inputCopy)
+			metricusecase.SortMetrics(&inputCopy)
 
 			assert.Equal(t, tt.expects, inputCopy)
 		})

@@ -6,8 +6,8 @@ type AppConfig struct {
 
 type AgentConfig struct {
 	EndpointAddr   string `env:"ADDRESS"`
-	PoolInterval   int    `env:"REPORT_INTERVAL"`
-	ReportInterval int    `env:"POLL_INTERVAL"`
+	PoolInterval   int    `env:"POLL_INTERVAL"`
+	ReportInterval int    `env:"REPORT_INTERVAL"`
 }
 
 type WebServerConfig struct {

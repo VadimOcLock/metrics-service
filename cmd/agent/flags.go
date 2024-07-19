@@ -18,12 +18,6 @@ const (
 	HTTPProtocolName      = "http"
 )
 
-var (
-	flagEndpointAddr   string
-	flagReportInterval int
-	flagPoolInterval   int
-)
-
 type netAddress struct {
 	Host string
 	Port int
@@ -40,7 +34,7 @@ func (n *netAddress) Set(value string) error {
 	}
 	port, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return fmt.Errorf("invalid port: %v", err)
+		return fmt.Errorf("invalid port: %w", err)
 	}
 	n.Host = parts[0]
 	n.Port = port
@@ -49,6 +43,12 @@ func (n *netAddress) Set(value string) error {
 }
 
 func parseFlags(cfg *config.Agent) error {
+	var (
+		flagEndpointAddr   string
+		flagReportInterval int
+		flagPoolInterval   int
+	)
+
 	flag.IntVar(&flagReportInterval, "r", defaultReportInterval, "report frequency in seconds")
 	flag.IntVar(&flagPoolInterval, "p", defaultPoolInterval, "poll data frequency in seconds")
 	flag.StringVar(&flagEndpointAddr, "a", defaultSrvAddr, "server endpoint host and port")
@@ -57,7 +57,7 @@ func parseFlags(cfg *config.Agent) error {
 
 	var endpointAddr netAddress
 	if err := endpointAddr.Set(flagEndpointAddr); err != nil {
-		return fmt.Errorf("error parsing endpoint address: %v", err)
+		return fmt.Errorf("error parsing endpoint address: %w", err)
 	}
 
 	if envVal := os.Getenv("ADDRESS"); envVal == "" {

@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 	"syscall"
+	"time"
+
+	"github.com/VadimOcLock/metrics-service/internal/api/handlers/metrichandler"
 
 	"github.com/VadimOcLock/metrics-service/internal/config"
 
-	"github.com/VadimOcLock/metrics-service/internal/api/handler"
 	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
 	"github.com/safeblock-dev/wr/taskgroup"
 )
@@ -18,22 +20,23 @@ func main() {
 	ctx := context.Background()
 	cfg, err := config.Load[config.WebServer]()
 	if err != nil {
-		log.Println("cfg load err: ", err)
-		os.Exit(1)
+		log.Fatalf("cfg load err: %v", err)
 	}
 	if err = parseFlags(&cfg); err != nil {
-		log.Println("parse flags err: ", err)
-		os.Exit(1)
+		log.Fatalf("parse flags err: %v", err)
 	}
 
-	mux := handler.New()
+	mux := metrichandler.New()
 	server := &http.Server{
-		Addr:    cfg.WebServerConfig.SrvAddr,
-		Handler: mux,
+		Addr:              cfg.WebServerConfig.SrvAddr,
+		Handler:           mux,
+		ReadHeaderTimeout: time.Second,
 	}
 
 	tasks := taskgroup.New()
 	tasks.Add(taskgroup.SignalHandler(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM))
 	tasks.Add(lifecycle.HTTPServer(server))
-	_ = tasks.Run()
+	if err = tasks.Run(); err != nil {
+		log.Printf("tasks shutdown err: %v", err)
+	}
 }

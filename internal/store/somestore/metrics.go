@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/VadimOcLock/metrics-service/internal/entity"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 )
@@ -43,19 +45,19 @@ func (i *Impl) UpdateCounterMetric(ctx context.Context, arg UpdateCounterMetricP
 type FindAllMetricsParams struct {
 }
 
-func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]Metric, error) {
+func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]entity.Metric, error) {
 	i.s.mu.Lock()
 	defer i.s.mu.Unlock()
-	var metrics []Metric
+	var metrics []entity.Metric
 	for n, v := range i.s.gauges {
-		metrics = append(metrics, Metric{
+		metrics = append(metrics, entity.Metric{
 			Type:  enum.GaugeMetricType,
 			Name:  n,
 			Value: v,
 		})
 	}
 	for n, v := range i.s.counters {
-		metrics = append(metrics, Metric{
+		metrics = append(metrics, entity.Metric{
 			Type:  enum.CounterMetricType,
 			Name:  n,
 			Value: v,
@@ -69,15 +71,15 @@ type FindCounterMetricParams struct {
 	MetricName string
 }
 
-func (i *Impl) FindCounterMetric(_ context.Context, arg FindCounterMetricParams) (Metric, error) {
+func (i *Impl) FindCounterMetric(_ context.Context, arg FindCounterMetricParams) (entity.Metric, error) {
 	i.s.mu.Lock()
 	defer i.s.mu.Unlock()
 	metricValue, ok := i.s.counters[arg.MetricName]
 	if !ok {
-		return Metric{}, errorz.ErrUndefinedMetricName
+		return entity.Metric{}, errorz.ErrUndefinedMetricName
 	}
 
-	return Metric{
+	return entity.Metric{
 		Type:  enum.CounterMetricType,
 		Name:  arg.MetricName,
 		Value: metricValue,
@@ -88,15 +90,15 @@ type FindGaugeMetricParams struct {
 	MetricName string
 }
 
-func (i *Impl) FindGaugeMetric(_ context.Context, arg FindGaugeMetricParams) (Metric, error) {
+func (i *Impl) FindGaugeMetric(_ context.Context, arg FindGaugeMetricParams) (entity.Metric, error) {
 	i.s.mu.Lock()
 	defer i.s.mu.Unlock()
 	metricValue, ok := i.s.gauges[arg.MetricName]
 	if !ok {
-		return Metric{}, errorz.ErrUndefinedMetricName
+		return entity.Metric{}, errorz.ErrUndefinedMetricName
 	}
 
-	return Metric{
+	return entity.Metric{
 		Type:  enum.GaugeMetricType,
 		Name:  arg.MetricName,
 		Value: metricValue,

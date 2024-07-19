@@ -54,7 +54,7 @@ func buildHTML(metrics []entity.Metric) (string, error) {
 		return "", err
 	}
 
-	sortMetrics(&metrics)
+	SortMetrics(&metrics)
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, metrics); err != nil {
 		return "", err
@@ -63,7 +63,7 @@ func buildHTML(metrics []entity.Metric) (string, error) {
 	return buf.String(), nil
 }
 
-func sortMetrics(metrics *[]entity.Metric) {
+func SortMetrics(metrics *[]entity.Metric) {
 	sort.Slice(*metrics, func(i, j int) bool {
 		if (*metrics)[i].Type == (*metrics)[j].Type {
 			return (*metrics)[i].Name < (*metrics)[j].Name

@@ -1,4 +1,4 @@
-package handler
+package metrichandler
 
 import (
 	"encoding/json"
@@ -6,27 +6,29 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
+
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"github.com/go-chi/chi/v5"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
-	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 )
 
-type MetricsHandler struct {
-	MetricsUseCase metricusecase.UseCase
+type MetricHandler struct {
+	MetricsUseCase MetricUseCase
 }
 
-func NewMetricsHandler(
-	uc metricusecase.UseCase,
-) MetricsHandler {
+var _ MetricUseCase = (*metricusecase.MetricUseCase)(nil)
 
-	return MetricsHandler{
+func NewMetricHandler(
+	uc MetricUseCase,
+) MetricHandler {
+	return MetricHandler{
 		MetricsUseCase: uc,
 	}
 }
 
-func (h MetricsHandler) UpdateMetric(res http.ResponseWriter, req *http.Request) {
+func (h *MetricHandler) UpdateMetric(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, errorz.ErrMsgOnlyPOSTMethodAccept, http.StatusMethodNotAllowed)
 
@@ -42,7 +44,11 @@ func (h MetricsHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 
 		return
 	}
-	bodyObj, err := h.MetricsUseCase.Update(req.Context(), dto)
+	bodyObj, err := h.MetricsUseCase.Update(req.Context(), metricusecase.MetricUpdateDTO{
+		Type:  dto.Type,
+		Name:  dto.Name,
+		Value: dto.Value,
+	})
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
@@ -65,13 +71,13 @@ func (h MetricsHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 	}
 }
 
-func (h MetricsHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request) {
+func (h *MetricHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 
 		return
 	}
-	r, err := h.MetricsUseCase.FindAll(req.Context(), metricusecase.FindAllDTO{})
+	r, err := h.MetricsUseCase.FindAll(req.Context(), metricusecase.MetricFindAllDTO{})
 	if err != nil {
 		log.Printf("find all metrics err: %s", err)
 		http.Error(res, errorz.ErrMsgFindAllMetrics, http.StatusInternalServerError)
@@ -88,7 +94,7 @@ func (h MetricsHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request
 	}
 }
 
-func (h MetricsHandler) GetMetricValue(res http.ResponseWriter, req *http.Request) {
+func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 
@@ -101,7 +107,7 @@ func (h MetricsHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 
 		return
 	}
-	find, err := h.MetricsUseCase.Find(req.Context(), metricusecase.FindDTO{
+	find, err := h.MetricsUseCase.Find(req.Context(), metricusecase.MetricFindDTO{
 		MetricType: metricType,
 		MetricName: metricName,
 	})
