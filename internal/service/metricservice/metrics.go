@@ -2,6 +2,7 @@ package metricservice
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
@@ -12,35 +13,39 @@ import (
 
 func (s *Service) UpdateGauge(ctx context.Context, dto UpdateGaugeDTO) error {
 	if err := dto.Valid(); err != nil {
-		return err
+		return fmt.Errorf("metricservice.UpdateGauge: %w", err)
 	}
-	_, err := s.Store.UpdateGaugeMetric(ctx, somestore.UpdateGaugeMetricParams{
+	if _, err := s.Store.UpdateGaugeMetric(ctx, somestore.UpdateGaugeMetricParams{
 		Name:  dto.Name,
 		Value: dto.Value,
-	})
+	}); err != nil {
+		return fmt.Errorf("metricservice.UpdateGauge: %w", err)
+	}
 
-	return err
+	return nil
 }
 
 func (s *Service) UpdateCounter(ctx context.Context, dto UpdateCounterDTO) error {
 	if err := dto.Valid(); err != nil {
-		return err
+		return fmt.Errorf("metricservice.UpdateCounter: %w", err)
 	}
-	_, err := s.Store.UpdateCounterMetric(ctx, somestore.UpdateCounterMetricParams{
+	if _, err := s.Store.UpdateCounterMetric(ctx, somestore.UpdateCounterMetricParams{
 		Name:  dto.Name,
 		Value: dto.Value,
-	})
+	}); err != nil {
+		return fmt.Errorf("metricservice.UpdateCounter: %w", err)
+	}
 
-	return err
+	return nil
 }
 
 func (s *Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metric, error) {
 	if err := dto.Valid(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("metricservice.FindAll: %w", err)
 	}
 	res, err := s.Store.FindAllMetrics(ctx, somestore.FindAllMetricsParams{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("metricservice.FindAll: %w", err)
 	}
 
 	return res, nil
@@ -48,7 +53,7 @@ func (s *Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metric,
 
 func (s *Service) Find(ctx context.Context, dto FindDTO) (entity.Metric, error) {
 	if err := dto.Valid(); err != nil {
-		return entity.Metric{}, err
+		return entity.Metric{}, fmt.Errorf("metricservice.Find: %w", err)
 	}
 	var m entity.Metric
 	switch dto.MetricType {

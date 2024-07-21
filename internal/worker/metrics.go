@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"log"
 	"math/big"
 	"net/http"
 	"runtime"
@@ -17,7 +16,7 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 )
 
-func (w MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) error {
+func (w *MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) error {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
@@ -54,7 +53,7 @@ func (w MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) erro
 	maxInt := big.NewInt(1000000)
 	randomInt, err := rand.Int(rand.Reader, maxInt)
 	if err != nil {
-		return fmt.Errorf("collectMetrics: %w", err)
+		return fmt.Errorf("worker.collectMetrics: %w", err)
 	}
 	bigFloat := new(big.Float).Quo(new(big.Float).SetInt(randomInt), big.NewFloat(10000))
 	randVal, _ := bigFloat.Float64()
@@ -63,7 +62,7 @@ func (w MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) erro
 	return nil
 }
 
-func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error {
+func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error {
 	client := resty.New()
 
 	gaugeMetrics := map[string]entity.Gauge{
@@ -111,7 +110,7 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 			ServerAddress: w.Opts.ServerAddr,
 			Metric:        metric,
 		}); err != nil {
-			return err
+			return fmt.Errorf("worker.sendMetrics: %w", err)
 		}
 	}
 	for name, value := range counterMetrics {
@@ -125,7 +124,7 @@ func (w MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error
 			ServerAddress: w.Opts.ServerAddr,
 			Metric:        metric,
 		}); err != nil {
-			return err
+			return fmt.Errorf("worker.sendMetrics: %w", err)
 		}
 	}
 
@@ -146,12 +145,10 @@ func SendMetric(_ context.Context, opts SendMetricOpts) error {
 		SetHeader("Content-Type", "text/plain").
 		Post(url)
 	if err != nil {
-		return err
+		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		log.Printf("Error response from server: %s\n", resp.Status())
-
 		return errorz.ErrSendMetricStatusNotOK
 	}
 

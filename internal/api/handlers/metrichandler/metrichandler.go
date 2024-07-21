@@ -3,7 +3,7 @@ package metrichandler
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"github.com/rs/zerolog/log"
 	"net/http"
 
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
@@ -58,13 +58,13 @@ func (h *MetricHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 	res.WriteHeader(http.StatusOK)
 	respBody, err := json.Marshal(bodyObj)
 	if err != nil {
-		log.Printf("marshalling response body err: %s", err)
+		log.Error().Msgf("marshalling response body err: %s", err)
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
 	}
 	if _, err = res.Write(respBody); err != nil {
-		log.Printf("response body write err: %s", err)
+		log.Error().Msgf("response body write err: %s", err)
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
@@ -79,7 +79,7 @@ func (h *MetricHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request
 	}
 	r, err := h.MetricsUseCase.FindAll(req.Context(), metricusecase.MetricFindAllDTO{})
 	if err != nil {
-		log.Printf("find all metrics err: %s", err)
+		log.Error().Msgf("find all metrics err: %s", err)
 		http.Error(res, errorz.ErrMsgFindAllMetrics, http.StatusInternalServerError)
 
 		return
@@ -87,7 +87,7 @@ func (h *MetricHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request
 	res.Header().Set("Content-Type", "text/html; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	if _, err = res.Write([]byte(r.HTML)); err != nil {
-		log.Printf("response body write err: %s", err)
+		log.Error().Msgf("response body write err: %s", err)
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
@@ -118,7 +118,7 @@ func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 		return
 	}
 	if err != nil {
-		log.Printf("find metric err: %s", err)
+		log.Error().Msgf("find metric err: %s", err)
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
@@ -126,7 +126,7 @@ func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusOK)
 	if _, err = res.Write([]byte(find.MetricValue)); err != nil {
-		log.Printf("response body write err: %s", err)
+		log.Error().Msgf("response body write err: %s", err)
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return

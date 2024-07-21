@@ -3,7 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
 
@@ -23,13 +23,13 @@ type MetricsWorkerOpts struct {
 	ReportInterval time.Duration
 }
 
-func NewMetricsWorker(opts MetricsWorkerOpts) MetricsWorker {
-	return MetricsWorker{
+func NewMetricsWorker(opts MetricsWorkerOpts) *MetricsWorker {
+	return &MetricsWorker{
 		Opts: opts,
 	}
 }
 
-func (w MetricsWorker) Run(ctx context.Context) error {
+func (w *MetricsWorker) Run(ctx context.Context) error {
 	var metrics entity.Metrics
 	var wg sync.WaitGroup
 	chanErr := make(chan error, 1)
@@ -48,7 +48,7 @@ func (w MetricsWorker) Run(ctx context.Context) error {
 			return ctx.Err()
 		case err := <-chanErr:
 			if err != nil {
-				log.Println(err)
+				log.Error().Msg(err.Error())
 			}
 		case <-pollTimer.C:
 			wg.Add(1)
@@ -56,9 +56,9 @@ func (w MetricsWorker) Run(ctx context.Context) error {
 				defer wg.Done()
 				err := w.collectMetrics(ctx, &metrics)
 				if err != nil {
-					chanErr <- fmt.Errorf("collectMetrics: %w", err)
+					chanErr <- fmt.Errorf("worker.run: %w", err)
 				}
-				log.Println("collect Metric success")
+				log.Debug().Msg("collect metric success")
 				pollTimer.Reset(w.Opts.PoolInterval)
 			}()
 		case <-reportTimer.C:
@@ -67,9 +67,9 @@ func (w MetricsWorker) Run(ctx context.Context) error {
 				defer wg.Done()
 				err := w.sendMetrics(ctx, &metrics)
 				if err != nil {
-					chanErr <- fmt.Errorf("sendMetrics: %w", err)
+					chanErr <- fmt.Errorf("worker.run: %w", err)
 				}
-				log.Println("send Metric success")
+				log.Debug().Msg("send metric success")
 				reportTimer.Reset(w.Opts.ReportInterval)
 			}()
 		}

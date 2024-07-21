@@ -2,6 +2,7 @@ package metricusecase
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"sort"
 
@@ -51,13 +52,13 @@ func buildHTML(metrics []entity.Metric) (string, error) {
 
 	t, err := template.New("metrics").Parse(tpl)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("metricusecase.buildHTML: %w", err)
 	}
 
 	SortMetrics(&metrics)
 	var buf bytes.Buffer
 	if err = t.Execute(&buf, metrics); err != nil {
-		return "", err
+		return "", fmt.Errorf("metricusecase.buildHTML: %w", err)
 	}
 
 	return buf.String(), nil

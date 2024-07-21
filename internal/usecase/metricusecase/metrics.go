@@ -55,16 +55,16 @@ func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (Metri
 func (uc *MetricUseCase) FindAll(ctx context.Context, _ MetricFindAllDTO) (MetricFindAllResp, error) {
 	metrics, err := uc.metricService.FindAll(ctx, metricservice.FindAllDTO{})
 	if err != nil {
-		return MetricFindAllResp{}, err
+		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
 	}
 	html, err := buildHTML(metrics)
 	if err != nil {
-		return MetricFindAllResp{}, err
+		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
 	}
 
 	return MetricFindAllResp{
 		HTML: html,
-	}, err
+	}, fmt.Errorf("metricusecase.FindAll: %w", err)
 }
 
 func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFindResp, error) {
@@ -73,10 +73,10 @@ func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFin
 		MetricName: dto.MetricName,
 	})
 	if err != nil {
-		return MetricFindResp{}, err
+		return MetricFindResp{}, fmt.Errorf("metricusecase.Find: %w", err)
 	}
 
 	return MetricFindResp{
 		MetricValue: fmt.Sprintf("%v", m.Value),
-	}, err
+	}, fmt.Errorf("metricusecase.Find: %w", err)
 }
