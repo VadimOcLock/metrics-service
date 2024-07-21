@@ -31,7 +31,7 @@ func main() {
 	}
 
 	// Logger.
-	log.Logger = zerolog.New(os.Stdout)
+	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 	// Worker.
 	w := worker.NewMetricsWorker(worker.MetricsWorkerOpts{
@@ -45,6 +45,6 @@ func main() {
 	tasks.Add(taskgroup.SignalHandler(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM))
 	tasks.Add(lifecycle.Worker(w))
 	if err = tasks.Run(); err != nil {
-		log.Fatal().Msgf("tasks shutdown err: %v", err)
+		log.Debug().Msgf("tasks shutdown err: %v", err)
 	}
 }
