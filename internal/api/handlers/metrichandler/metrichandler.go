@@ -3,8 +3,9 @@ package metrichandler
 import (
 	"encoding/json"
 	"errors"
-	"github.com/rs/zerolog/log"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 

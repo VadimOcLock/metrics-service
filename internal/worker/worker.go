@@ -3,9 +3,10 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
