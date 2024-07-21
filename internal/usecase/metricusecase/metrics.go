@@ -78,5 +78,5 @@ func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFin
 
 	return MetricFindResp{
 		MetricValue: fmt.Sprintf("%v", m.Value),
-	}, fmt.Errorf("metricusecase.Find: %w", err)
+	}, nil
 }
