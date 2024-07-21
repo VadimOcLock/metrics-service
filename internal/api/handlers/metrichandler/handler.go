@@ -3,7 +3,9 @@ package metrichandler
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/VadimOcLock/metrics-service/internal/api/handlers/middleware"
+
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
@@ -19,7 +21,7 @@ func New() http.Handler {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(chimiddleware.Recoverer)
 
 	r.Get("/", mh.GetAllMetrics)
 	r.Route("/update", func(r chi.Router) {

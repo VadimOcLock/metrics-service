@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"syscall"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/VadimOcLock/metrics-service/internal/config"
 
@@ -17,24 +19,32 @@ import (
 func main() {
 	ctx := context.Background()
 
+	// Config.
 	cfg, err := config.Load[config.Agent]()
 	if err != nil {
-		log.Println("cfg load err: ", err)
-		os.Exit(1)
-	}
-	if err = parseFlags(&cfg); err != nil {
-		log.Println("parse flags err: ", err)
-		os.Exit(1)
+		log.Fatal().Msgf("cfg load err: %v", err)
 	}
 
+	// Flags.
+	if err = parseFlags(&cfg); err != nil {
+		log.Fatal().Msgf("parse flags err: %v", err)
+	}
+
+	// Logger.
+	log.Logger = zerolog.New(os.Stdout)
+
+	// Worker.
 	w := worker.NewMetricsWorker(worker.MetricsWorkerOpts{
 		ServerAddr:     HTTPProtocolName + "://" + cfg.EndpointAddr,
 		PoolInterval:   time.Duration(cfg.AgentConfig.PoolInterval) * time.Second,
 		ReportInterval: time.Duration(cfg.AgentConfig.ReportInterval) * time.Second,
 	})
 
+	// Run app.
 	tasks := taskgroup.New()
 	tasks.Add(taskgroup.SignalHandler(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM))
 	tasks.Add(lifecycle.Worker(w))
-	_ = tasks.Run()
+	if err = tasks.Run(); err != nil {
+		log.Fatal().Msgf("tasks shutdown err: %v", err)
+	}
 }
