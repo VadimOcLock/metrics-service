@@ -1,11 +1,16 @@
 package entity
 
+import (
+	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
+)
+
 type (
 	Gauge   float64
 	Counter int64
 )
 
-type Metrics struct {
+type MetricsData struct {
 	Alloc         Gauge
 	BuckHashSys   Gauge
 	Frees         Gauge
@@ -43,8 +48,23 @@ type MetricDTO struct {
 	Value string
 }
 
-type Metric struct {
-	Type  string
-	Name  string
-	Value any
+//type Metric struct {
+//	Type  string
+//	Name  string
+//	Value any
+//}
+
+type Metrics struct {
+	ID    string   `json:"id"`              // имя метрики
+	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
+	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+}
+
+func (m *Metrics) Valid() error {
+	if m.MType == enum.GaugeMetricType || m.MType == enum.CounterMetricType {
+		return nil
+	}
+
+	return errorz.ErrUndefinedMetricType
 }

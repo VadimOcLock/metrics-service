@@ -45,22 +45,22 @@ func (i *Impl) UpdateCounterMetric(ctx context.Context, arg UpdateCounterMetricP
 type FindAllMetricsParams struct {
 }
 
-func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]entity.Metric, error) {
+func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]entity.Metrics, error) {
 	i.s.mu.Lock()
 	defer i.s.mu.Unlock()
-	var metrics []entity.Metric
+	var metrics []entity.Metrics
 	for n, v := range i.s.gauges {
-		metrics = append(metrics, entity.Metric{
-			Type:  enum.GaugeMetricType,
-			Name:  n,
-			Value: v,
+		metrics = append(metrics, entity.Metrics{
+			MType: enum.GaugeMetricType,
+			ID:    n,
+			Value: &v,
 		})
 	}
 	for n, v := range i.s.counters {
-		metrics = append(metrics, entity.Metric{
-			Type:  enum.CounterMetricType,
-			Name:  n,
-			Value: v,
+		metrics = append(metrics, entity.Metrics{
+			MType: enum.CounterMetricType,
+			ID:    n,
+			Delta: &v,
 		})
 	}
 
@@ -71,18 +71,18 @@ type FindCounterMetricParams struct {
 	MetricName string
 }
 
-func (i *Impl) FindCounterMetric(_ context.Context, arg FindCounterMetricParams) (entity.Metric, error) {
+func (i *Impl) FindCounterMetric(_ context.Context, arg FindCounterMetricParams) (entity.Metrics, error) {
 	i.s.mu.Lock()
 	defer i.s.mu.Unlock()
 	metricValue, ok := i.s.counters[arg.MetricName]
 	if !ok {
-		return entity.Metric{}, errorz.ErrUndefinedMetricName
+		return entity.Metrics{}, errorz.ErrUndefinedMetricName
 	}
 
-	return entity.Metric{
-		Type:  enum.CounterMetricType,
-		Name:  arg.MetricName,
-		Value: metricValue,
+	return entity.Metrics{
+		MType: enum.CounterMetricType,
+		ID:    arg.MetricName,
+		Delta: &metricValue,
 	}, nil
 }
 
@@ -90,17 +90,17 @@ type FindGaugeMetricParams struct {
 	MetricName string
 }
 
-func (i *Impl) FindGaugeMetric(_ context.Context, arg FindGaugeMetricParams) (entity.Metric, error) {
+func (i *Impl) FindGaugeMetric(_ context.Context, arg FindGaugeMetricParams) (entity.Metrics, error) {
 	i.s.mu.Lock()
 	defer i.s.mu.Unlock()
 	metricValue, ok := i.s.gauges[arg.MetricName]
 	if !ok {
-		return entity.Metric{}, errorz.ErrUndefinedMetricName
+		return entity.Metrics{}, errorz.ErrUndefinedMetricName
 	}
 
-	return entity.Metric{
-		Type:  enum.GaugeMetricType,
-		Name:  arg.MetricName,
-		Value: metricValue,
+	return entity.Metrics{
+		MType: enum.GaugeMetricType,
+		ID:    arg.MetricName,
+		Value: &metricValue,
 	}, nil
 }

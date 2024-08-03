@@ -23,13 +23,17 @@ func New() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 
+	//r.Get("/", mh.GetAllMetrics)
+	//r.Route("/update", func(r chi.Router) {
+	//	r.Post("/{type}/{name}/{value}", mh.UpdateMetric)
+	//})
+	//r.Route("/value", func(r chi.Router) {
+	//	r.Get("/{type}/{name}", mh.GetMetricValue)
+	//})
+
 	r.Get("/", mh.GetAllMetrics)
-	r.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", mh.UpdateMetric)
-	})
-	r.Route("/value", func(r chi.Router) {
-		r.Get("/{type}/{name}", mh.GetMetricValue)
-	})
+	r.Post("/update/", mh.UpdateMetric)
+	r.Get("/value/", mh.GetMetricValue)
 
 	return r
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 )
 
-func (w *MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) error {
+func (w *MetricsWorker) collectMetrics(_ context.Context, m *entity.MetricsData) error {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
@@ -62,7 +62,7 @@ func (w *MetricsWorker) collectMetrics(_ context.Context, m *entity.Metrics) err
 	return nil
 }
 
-func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.Metrics) error {
+func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) error {
 	client := resty.New()
 
 	gaugeMetrics := map[string]entity.Gauge{

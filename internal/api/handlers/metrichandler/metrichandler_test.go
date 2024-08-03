@@ -3,6 +3,7 @@ package metrichandler_test
 import (
 	"context"
 	"errors"
+	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -44,7 +45,7 @@ func updateMetricHandlerTestCases() []updateMetricHandlerTestCase {
 			name: "non POST method",
 			input: updateMetricHandlerInput{
 				method: http.MethodGet,
-				query:  "/update/gauge/metric1/value",
+				query:  "/update/",
 			},
 			want: updateMetricHandlerWant{
 				statusCode: http.StatusMethodNotAllowed,
@@ -64,7 +65,7 @@ func updateMetricHandlerTestCases() []updateMetricHandlerTestCase {
 			name: "undefined metric type",
 			input: updateMetricHandlerInput{
 				method:      http.MethodPost,
-				query:       "/update/undefined_type/metric1/123.45",
+				query:       "/update/",
 				metricType:  "undefined_type",
 				metricName:  "metric1",
 				metricValue: "123.45",
@@ -74,10 +75,10 @@ func updateMetricHandlerTestCases() []updateMetricHandlerTestCase {
 			},
 		},
 		{
-			name: "successful metric update",
+			name: "successful gauge metric update",
 			input: updateMetricHandlerInput{
 				method:      http.MethodPost,
-				query:       "/update/gauge/metric1/123.45",
+				query:       "/update/",
 				metricType:  "gauge",
 				metricName:  "metric1",
 				metricValue: "123.45",
@@ -105,9 +106,6 @@ func TestMetricsHandler_UpdateMetric(t *testing.T) {
 
 			r := httptest.NewRequest(tt.input.method, tt.input.query, nil)
 			ctx := chi.NewRouteContext()
-			ctx.URLParams.Add("type", tt.input.metricType)
-			ctx.URLParams.Add("name", tt.input.metricName)
-			ctx.URLParams.Add("value", tt.input.metricValue)
 			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
 
 			w := httptest.NewRecorder()
@@ -115,23 +113,37 @@ func TestMetricsHandler_UpdateMetric(t *testing.T) {
 			switch tt.name {
 			case "undefined metric type":
 				metricUseCase.On("Update", r.Context(), metricusecase.MetricUpdateDTO{
-					Type:  "undefined_type",
-					Name:  "metric1",
-					Value: "123.45",
-				}).Return(metricusecase.MetricUpdateResp{}, errorz.ErrUndefinedMetricType)
+					MType: "undefined_type",
+					ID:    "metric1",
+				}).Return(entity.Metrics{}, errorz.ErrUndefinedMetricType)
 			case "undefined metric name":
+				val := 123.45
 				metricUseCase.On("Update", r.Context(), metricusecase.MetricUpdateDTO{
-					Type:  "gauge",
-					Name:  "undefined_name",
-					Value: "123.45",
-				}).Return(metricusecase.MetricUpdateResp{}, errorz.ErrUndefinedMetricName)
-			case "successful metric update":
+					MType: "gauge",
+					ID:    "undefined_name",
+					Value: &val,
+				}).Return(entity.Metrics{}, errorz.ErrUndefinedMetricName)
+			case "successful gauge metric update":
+				val := 123.45
 				metricUseCase.On("Update", r.Context(), metricusecase.MetricUpdateDTO{
-					Type:  "gauge",
-					Name:  "metric1",
-					Value: "123.45",
-				}).Return(metricusecase.MetricUpdateResp{
-					Message: "Metric updated successfully",
+					MType: "gauge",
+					ID:    "metric1",
+					Value: &val,
+				}).Return(entity.Metrics{
+					ID:    "metric1",
+					MType: "gauge",
+					Value: &val,
+				}, nil)
+			case "successful gauge metric update":
+				val := 123.45
+				metricUseCase.On("Update", r.Context(), metricusecase.MetricUpdateDTO{
+					MType: "gauge",
+					ID:    "metric1",
+					Value: &val,
+				}).Return(entity.Metrics{
+					ID:    "metric1",
+					MType: "gauge",
+					Value: &val,
 				}, nil)
 			}
 

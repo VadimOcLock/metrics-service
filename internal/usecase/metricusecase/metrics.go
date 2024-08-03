@@ -3,53 +3,43 @@ package metricusecase
 import (
 	"context"
 	"fmt"
-	"strconv"
 
+	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 )
 
-func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (MetricUpdateResp, error) {
-	switch dto.Type {
+func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (entity.Metrics, error) {
+	switch dto.MType {
 	case enum.GaugeMetricType:
-		vl, err := strconv.ParseFloat(dto.Value, 64)
-		if err != nil {
-			return MetricUpdateResp{}, errorz.ErrInvalidMetricValue
+		if dto.Value == nil {
+			return entity.Metrics{}, errorz.ErrInvalidMetricValue
 		}
-		if dto.Name == "" {
-			return MetricUpdateResp{}, errorz.ErrInvalidMetricName
-		}
-		err = uc.metricService.UpdateGauge(ctx, metricservice.UpdateGaugeDTO{
-			Name:  dto.Name,
-			Value: vl,
+		err := uc.metricService.UpdateGauge(ctx, metricservice.UpdateGaugeDTO{
+			Name:  dto.ID,
+			Value: *dto.Value,
 		})
 		if err != nil {
-			return MetricUpdateResp{}, errorz.ErrUpdateMetricFailed
+			return entity.Metrics{}, errorz.ErrUpdateMetricFailed
 		}
 	case enum.CounterMetricType:
-		vl, err := strconv.ParseInt(dto.Value, 10, 64)
-		if err != nil {
-			return MetricUpdateResp{}, errorz.ErrInvalidMetricValue
+		if dto.Delta == nil {
+			return entity.Metrics{}, errorz.ErrInvalidMetricValue
 		}
-		if dto.Name == "" {
-			return MetricUpdateResp{}, errorz.ErrInvalidMetricName
-		}
-		err = uc.metricService.UpdateCounter(ctx, metricservice.UpdateCounterDTO{
-			Name:  dto.Name,
-			Value: vl,
+		err := uc.metricService.UpdateCounter(ctx, metricservice.UpdateCounterDTO{
+			Name:  dto.ID,
+			Value: *dto.Delta,
 		})
 		if err != nil {
-			return MetricUpdateResp{}, errorz.ErrUpdateMetricFailed
+			return entity.Metrics{}, errorz.ErrUpdateMetricFailed
 		}
 	default:
-		return MetricUpdateResp{}, errorz.ErrUndefinedMetricType
+		return entity.Metrics{}, errorz.ErrUndefinedMetricType
 	}
 
-	return MetricUpdateResp{
-		Message: "metric update success",
-	}, nil
+	return entity.Metrics(dto), nil
 }
 
 func (uc *MetricUseCase) FindAll(ctx context.Context, _ MetricFindAllDTO) (MetricFindAllResp, error) {
@@ -67,16 +57,14 @@ func (uc *MetricUseCase) FindAll(ctx context.Context, _ MetricFindAllDTO) (Metri
 	}, nil
 }
 
-func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFindResp, error) {
-	m, err := uc.metricService.Find(ctx, metricservice.FindDTO{
+func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (entity.Metrics, error) {
+	metrics, err := uc.metricService.Find(ctx, metricservice.FindDTO{
 		MetricType: dto.MetricType,
 		MetricName: dto.MetricName,
 	})
 	if err != nil {
-		return MetricFindResp{}, fmt.Errorf("metricusecase.Find: %w", err)
+		return entity.Metrics{}, fmt.Errorf("metricusecase.Find: %w", err)
 	}
 
-	return MetricFindResp{
-		MetricValue: fmt.Sprintf("%v", m.Value),
-	}, nil
+	return metrics, nil
 }

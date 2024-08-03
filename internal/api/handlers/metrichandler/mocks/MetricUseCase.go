@@ -5,6 +5,8 @@ package mocks
 import (
 	context "context"
 
+	entity "github.com/VadimOcLock/metrics-service/internal/entity"
+
 	metricusecase "github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 
 	mock "github.com/stretchr/testify/mock"
@@ -16,22 +18,22 @@ type MetricUseCase struct {
 }
 
 // Find provides a mock function with given fields: ctx, dto
-func (_m *MetricUseCase) Find(ctx context.Context, dto metricusecase.MetricFindDTO) (metricusecase.MetricFindResp, error) {
+func (_m *MetricUseCase) Find(ctx context.Context, dto metricusecase.MetricFindDTO) (entity.Metrics, error) {
 	ret := _m.Called(ctx, dto)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Find")
 	}
 
-	var r0 metricusecase.MetricFindResp
+	var r0 entity.Metrics
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricFindDTO) (metricusecase.MetricFindResp, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricFindDTO) (entity.Metrics, error)); ok {
 		return rf(ctx, dto)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricFindDTO) metricusecase.MetricFindResp); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricFindDTO) entity.Metrics); ok {
 		r0 = rf(ctx, dto)
 	} else {
-		r0 = ret.Get(0).(metricusecase.MetricFindResp)
+		r0 = ret.Get(0).(entity.Metrics)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, metricusecase.MetricFindDTO) error); ok {
@@ -72,22 +74,22 @@ func (_m *MetricUseCase) FindAll(ctx context.Context, _a1 metricusecase.MetricFi
 }
 
 // Update provides a mock function with given fields: ctx, dto
-func (_m *MetricUseCase) Update(ctx context.Context, dto metricusecase.MetricUpdateDTO) (metricusecase.MetricUpdateResp, error) {
+func (_m *MetricUseCase) Update(ctx context.Context, dto metricusecase.MetricUpdateDTO) (entity.Metrics, error) {
 	ret := _m.Called(ctx, dto)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Update")
 	}
 
-	var r0 metricusecase.MetricUpdateResp
+	var r0 entity.Metrics
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricUpdateDTO) (metricusecase.MetricUpdateResp, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricUpdateDTO) (entity.Metrics, error)); ok {
 		return rf(ctx, dto)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricUpdateDTO) metricusecase.MetricUpdateResp); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricUpdateDTO) entity.Metrics); ok {
 		r0 = rf(ctx, dto)
 	} else {
-		r0 = ret.Get(0).(metricusecase.MetricUpdateResp)
+		r0 = ret.Get(0).(entity.Metrics)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, metricusecase.MetricUpdateDTO) error); ok {

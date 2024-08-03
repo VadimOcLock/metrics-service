@@ -39,7 +39,7 @@ func (s *Service) UpdateCounter(ctx context.Context, dto UpdateCounterDTO) error
 	return nil
 }
 
-func (s *Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metric, error) {
+func (s *Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metrics, error) {
 	if err := dto.Valid(); err != nil {
 		return nil, fmt.Errorf("metricservice.FindAll: %w", err)
 	}
@@ -51,18 +51,18 @@ func (s *Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metric,
 	return res, nil
 }
 
-func (s *Service) Find(ctx context.Context, dto FindDTO) (entity.Metric, error) {
+func (s *Service) Find(ctx context.Context, dto FindDTO) (entity.Metrics, error) {
 	if err := dto.Valid(); err != nil {
-		return entity.Metric{}, fmt.Errorf("metricservice.Find: %w", err)
+		return entity.Metrics{}, fmt.Errorf("metricservice.Find: %w", err)
 	}
-	var m entity.Metric
+	var m entity.Metrics
 	switch dto.MetricType {
 	case enum.GaugeMetricType:
 		sm, err := s.Store.FindGaugeMetric(ctx, somestore.FindGaugeMetricParams{
 			MetricName: dto.MetricName,
 		})
 		if err != nil {
-			return entity.Metric{}, err
+			return entity.Metrics{}, err
 		}
 		m = sm
 	case enum.CounterMetricType:
@@ -70,12 +70,12 @@ func (s *Service) Find(ctx context.Context, dto FindDTO) (entity.Metric, error) 
 			MetricName: dto.MetricName,
 		})
 		if err != nil {
-			return entity.Metric{}, err
+			return entity.Metrics{}, err
 		}
 		m = sm
 	default:
 
-		return entity.Metric{}, errorz.ErrUndefinedMetricType
+		return entity.Metrics{}, errorz.ErrUndefinedMetricType
 	}
 
 	return m, nil

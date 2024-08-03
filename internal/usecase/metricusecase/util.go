@@ -9,13 +9,13 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 )
 
-func buildHTML(metrics []entity.Metric) (string, error) {
+func buildHTML(metrics []entity.Metrics) (string, error) {
 	const tpl = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Metrics</title>
+        <title>MetricsData</title>
 		<style>
 			table {
 			  font-family: arial, sans-serif;
@@ -38,12 +38,14 @@ func buildHTML(metrics []entity.Metric) (string, error) {
                 <th>Type</th>
                 <th>Name</th>
                 <th>Value</th>
+                <th>Delta</th>
             </tr>
             {{range .}}
             <tr>
-                <td>{{.Type}}</td>
-                <td>{{.Name}}</td>
+                <td>{{.MType}}</td>
+                <td>{{.ID}}</td>
                 <td>{{.Value}}</td>
+                <td>{{.Delta}}</td>
             </tr>
             {{end}}
         </table>
@@ -64,12 +66,12 @@ func buildHTML(metrics []entity.Metric) (string, error) {
 	return buf.String(), nil
 }
 
-func SortMetrics(metrics *[]entity.Metric) {
+func SortMetrics(metrics *[]entity.Metrics) {
 	sort.Slice(*metrics, func(i, j int) bool {
-		if (*metrics)[i].Type == (*metrics)[j].Type {
-			return (*metrics)[i].Name < (*metrics)[j].Name
+		if (*metrics)[i].MType == (*metrics)[j].MType {
+			return (*metrics)[i].ID < (*metrics)[j].ID
 		}
 
-		return (*metrics)[i].Type < (*metrics)[j].Type
+		return (*metrics)[i].MType < (*metrics)[j].MType
 	})
 }
