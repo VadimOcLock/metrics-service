@@ -56,7 +56,7 @@ func (h *MetricHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 
 		return
 	}
-	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	respBody, err := json.Marshal(bodyObj)
 	if err != nil {
