@@ -31,7 +31,7 @@ func NewMetricsWorker(opts MetricsWorkerOpts) *MetricsWorker {
 }
 
 func (w *MetricsWorker) Run(ctx context.Context) error {
-	var metrics entity.Metrics
+	var metrics entity.MetricsData
 	var wg sync.WaitGroup
 	chanErr := make(chan error, 1)
 	pollTimer := time.NewTimer(w.Opts.PoolInterval)

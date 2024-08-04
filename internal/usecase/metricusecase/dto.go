@@ -3,7 +3,8 @@ package metricusecase
 import "github.com/VadimOcLock/metrics-service/internal/entity"
 
 type MetricUpdateResp struct {
-	Message string `json:"message"`
+	Message string          `json:"message"`
+	Data    *entity.Metrics `json:"-"`
 }
 
 type MetricUpdateDTO entity.MetricDTO
@@ -22,4 +23,5 @@ type MetricFindDTO struct {
 
 type MetricFindResp struct {
 	MetricValue string
+	Data        *entity.Metrics `json:"-"`
 }

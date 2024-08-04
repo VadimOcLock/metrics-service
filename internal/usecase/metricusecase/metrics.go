@@ -3,6 +3,7 @@ package metricusecase
 import (
 	"context"
 	"fmt"
+	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"strconv"
 
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
@@ -47,8 +48,14 @@ func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (Metri
 		return MetricUpdateResp{}, errorz.ErrUndefinedMetricType
 	}
 
+	metrics, err := entity.BuildMetrics(entity.MetricDTO(dto))
+	if err != nil {
+		return MetricUpdateResp{}, fmt.Errorf("build err: %w", err)
+	}
+
 	return MetricUpdateResp{
 		Message: "metric update success",
+		Data:    &metrics,
 	}, nil
 }
 
@@ -76,7 +83,17 @@ func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFin
 		return MetricFindResp{}, fmt.Errorf("metricusecase.Find: %w", err)
 	}
 
+	metrics, err := entity.BuildMetrics(entity.MetricDTO{
+		Type:  dto.MetricType,
+		Name:  dto.MetricName,
+		Value: fmt.Sprintf("%v", m.Value),
+	})
+	if err != nil {
+		return MetricFindResp{}, fmt.Errorf("metricusecase.Find: %w", err)
+	}
+
 	return MetricFindResp{
 		MetricValue: fmt.Sprintf("%v", m.Value),
+		Data:        &metrics,
 	}, nil
 }

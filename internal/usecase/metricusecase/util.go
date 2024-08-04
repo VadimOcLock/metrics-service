@@ -15,7 +15,7 @@ func buildHTML(metrics []entity.Metric) (string, error) {
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Metrics</title>
+        <title>MetricsData</title>
 		<style>
 			table {
 			  font-family: arial, sans-serif;
