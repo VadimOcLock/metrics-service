@@ -3,7 +3,9 @@ package worker
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"math/big"
 	"net/http"
 	"runtime"
@@ -142,12 +144,17 @@ func SendMetric(_ context.Context, opts SendMetricOpts) error {
 	//url := fmt.Sprintf("%s/update/%s/%s/%s", opts.ServerAddress,
 	//	opts.Metric.MType, opts.Metric.ID, opts.Metric.MetricValue())
 
+	body, err := json.Marshal(opts.Metric)
+	if err != nil {
+		return fmt.Errorf("worker.SendMetric: %w", err)
+	}
+
 	resp, err := opts.Client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(opts.Metric).
+		SetBody(body).
 		Post(url)
 	if err != nil {
-		fmt.Println(opts.Metric)
+		log.Debug().Msg(string(body))
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
 
