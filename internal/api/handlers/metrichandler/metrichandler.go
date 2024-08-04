@@ -193,7 +193,7 @@ func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 }
 
 func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
+	if req.Method != http.MethodPost {
 		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 
 		return
