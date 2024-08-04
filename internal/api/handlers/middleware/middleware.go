@@ -60,5 +60,6 @@ func Logger(next http.Handler) http.Handler {
 			Int("content length", wrappedWriter.contentLength).
 			Str("request body", string(body)).
 			Msg("request completed")
+
 	})
 }
