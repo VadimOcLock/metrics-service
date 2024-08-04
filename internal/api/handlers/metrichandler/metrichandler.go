@@ -194,6 +194,7 @@ func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 
 func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
+		log.Debug().Msg("http.StatusMethodNotAllowed")
 		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 
 		return
@@ -201,6 +202,7 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 
 	var dto entity.Metrics
 	if err := json.NewDecoder(req.Body).Decode(&dto); err != nil {
+		log.Error().Err(err)
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
 		return
@@ -211,6 +213,7 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 		}
 	}(req.Body)
 	if err := dto.Valid(); err != nil {
+		log.Error().Err(err)
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
 		return

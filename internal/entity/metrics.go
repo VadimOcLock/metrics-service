@@ -94,13 +94,13 @@ func BuildMetrics(dto MetricDTO) (Metrics, error) {
 // MetricValue - метод для получения значения метрики в виде строки.
 func (m *Metrics) MetricValue() (string, error) {
 	switch m.MType {
-	case "gauge":
+	case enum.GaugeMetricType:
 		if m.Value != nil {
 			return strconv.FormatFloat(*m.Value, 'f', -1, 64), nil
 		}
 
 		return "", errors.New("value is nil for gauge type")
-	case "counter":
+	case enum.CounterMetricType:
 		if m.Delta != nil {
 			return strconv.FormatInt(*m.Delta, 10), nil
 		}
@@ -114,11 +114,11 @@ func (m *Metrics) MetricValue() (string, error) {
 // Valid - метод для проверки корректности метрики.
 func (m *Metrics) Valid() error {
 	switch m.MType {
-	case "gauge":
+	case enum.GaugeMetricType:
 		if m.Value == nil {
 			return errors.New("value is nil for gauge type")
 		}
-	case "counter":
+	case enum.CounterMetricType:
 		if m.Delta == nil {
 			return errors.New("delta is nil for counter type")
 		}
