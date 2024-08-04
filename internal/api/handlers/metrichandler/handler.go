@@ -29,7 +29,7 @@ func New() http.Handler {
 		r.Post("/{type}/{name}/{value}", mh.UpdateMetric)
 	})
 	r.Route("/value", func(r chi.Router) {
-		r.Get("/", mh.GetMetricValueJSON)
+		r.Post("/", mh.GetMetricValueJSON)
 		r.Get("/{type}/{name}", mh.GetMetricValue)
 	})
 
