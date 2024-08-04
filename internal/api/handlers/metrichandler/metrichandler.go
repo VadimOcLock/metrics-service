@@ -212,12 +212,6 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 			log.Error().Err(err)
 		}
 	}(req.Body)
-	if err := dto.Valid(); err != nil {
-		log.Error().Err(err).Send()
-		http.Error(res, err.Error(), http.StatusNotFound)
-
-		return
-	}
 
 	find, err := h.MetricsUseCase.Find(req.Context(), metricusecase.MetricFindDTO{
 		MetricType: dto.MType,
