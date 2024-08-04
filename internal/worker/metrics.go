@@ -100,10 +100,10 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) 
 	}
 
 	for name, value := range gaugeMetrics {
-		metric := entity.MetricDTO{
-			Type:  enum.GaugeMetricType,
-			Name:  name,
-			Value: fmt.Sprintf("%v", value),
+		metric := entity.Metrics{
+			ID:    name,
+			MType: enum.GaugeMetricType,
+			Value: (*float64)(&value),
 		}
 		if err := SendMetric(ctx, SendMetricOpts{
 			Client:        client,
@@ -114,10 +114,10 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) 
 		}
 	}
 	for name, value := range counterMetrics {
-		metric := entity.MetricDTO{
-			Type:  enum.CounterMetricType,
-			Name:  name,
-			Value: fmt.Sprintf("%v", value),
+		metric := entity.Metrics{
+			ID:    name,
+			MType: enum.CounterMetricType,
+			Delta: (*int64)(&value),
 		}
 		if err := SendMetric(ctx, SendMetricOpts{
 			Client:        client,
@@ -134,15 +134,16 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) 
 type SendMetricOpts struct {
 	Client        *resty.Client
 	ServerAddress string
-	Metric        entity.MetricDTO
+	Metric        entity.Metrics
 }
 
 func SendMetric(_ context.Context, opts SendMetricOpts) error {
 	metric := opts.Metric
-	url := fmt.Sprintf("%s/update/%s/%s/%s", opts.ServerAddress, metric.Type, metric.Name, metric.Value)
+	url := opts.ServerAddress + "/update/"
 
 	resp, err := opts.Client.R().
-		SetHeader("Content-Type", "text/plain").
+		SetHeader("Content-Type", "application/json").
+		SetBody(metric).
 		Post(url)
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)

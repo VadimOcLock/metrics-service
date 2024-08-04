@@ -48,12 +48,6 @@ type MetricDTO struct {
 	Value string
 }
 
-//type Metric struct {
-//	Type  string
-//	Name  string
-//	Value any
-//}
-
 type Metrics struct {
 	ID    string   `json:"id"`              // имя метрики
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter

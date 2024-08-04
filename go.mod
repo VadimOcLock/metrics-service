@@ -10,6 +10,7 @@ require (
 
 require (
 	github.com/caarlos0/env/v11 v11.1.0
+	github.com/rs/zerolog v1.33.0
 	github.com/safeblock-dev/werr v0.0.8
 	github.com/stretchr/testify v1.9.0
 )
@@ -20,7 +21,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect

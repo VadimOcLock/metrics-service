@@ -50,17 +50,19 @@ func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]enti
 	defer i.s.mu.Unlock()
 	var metrics []entity.Metrics
 	for n, v := range i.s.gauges {
+		ptr := &v
 		metrics = append(metrics, entity.Metrics{
 			MType: enum.GaugeMetricType,
 			ID:    n,
-			Value: &v,
+			Value: ptr,
 		})
 	}
 	for n, v := range i.s.counters {
+		ptr := &v
 		metrics = append(metrics, entity.Metrics{
 			MType: enum.CounterMetricType,
 			ID:    n,
-			Delta: &v,
+			Delta: ptr,
 		})
 	}
 
