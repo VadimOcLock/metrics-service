@@ -138,11 +138,15 @@ type SendMetricOpts struct {
 }
 
 func SendMetric(_ context.Context, opts SendMetricOpts) error {
-	metric := opts.Metric
-	url := fmt.Sprintf("%s/update/%s/%s/%s", opts.ServerAddress, metric.Type, metric.Name, metric.Value)
+	metric, err := entity.BuildMetrics(opts.Metric)
+	if err != nil {
+		return fmt.Errorf("worker.SendMetric: %w", err)
+	}
+	url := opts.ServerAddress + "/update/"
 
 	resp, err := opts.Client.R().
-		SetHeader("Content-Type", "text/plain").
+		SetHeader("Content-Type", "application/json").
+		SetBody(metric).
 		Post(url)
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+
+	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 )
 
 type (
@@ -70,16 +72,16 @@ func BuildMetrics(dto MetricDTO) (Metrics, error) {
 	}
 
 	switch dto.Type {
-	case "gauge":
+	case enum.GaugeMetricType:
 		value, err := strconv.ParseFloat(dto.Value, 64)
 		if err != nil {
-			return Metrics{}, fmt.Errorf("invalid gauge value: %v", err)
+			return Metrics{}, fmt.Errorf("invalid gauge value: %w", err)
 		}
 		metric.Value = &value
-	case "counter":
+	case enum.CounterMetricType:
 		delta, err := strconv.ParseInt(dto.Value, 10, 64)
 		if err != nil {
-			return Metrics{}, fmt.Errorf("invalid counter value: %v", err)
+			return Metrics{}, fmt.Errorf("invalid counter value: %w", err)
 		}
 		metric.Delta = &delta
 	default:
@@ -97,13 +99,13 @@ func (m *Metrics) MetricValue() (string, error) {
 			return strconv.FormatFloat(*m.Value, 'f', -1, 64), nil
 		}
 
-		return "", fmt.Errorf("value is nil for gauge type")
+		return "", errors.New("value is nil for gauge type")
 	case "counter":
 		if m.Delta != nil {
 			return strconv.FormatInt(*m.Delta, 10), nil
 		}
 
-		return "", fmt.Errorf("delta is nil for counter type")
+		return "", errors.New("delta is nil for counter type")
 	default:
 		return "", fmt.Errorf("unknown metric type: %s", m.MType)
 	}

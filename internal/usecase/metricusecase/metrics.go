@@ -3,8 +3,9 @@ package metricusecase
 import (
 	"context"
 	"fmt"
-	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"strconv"
+
+	"github.com/VadimOcLock/metrics-service/internal/entity"
 
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 
