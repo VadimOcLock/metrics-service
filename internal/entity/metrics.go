@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"strconv"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 )
@@ -61,4 +63,15 @@ func (m *Metrics) Valid() error {
 	}
 
 	return errorz.ErrUndefinedMetricType
+}
+
+func (m *Metrics) MetricValue() string {
+	if m.MType == "gauge" && m.Value != nil {
+		return strconv.FormatFloat(*m.Value, 'f', -1, 64)
+	}
+	if m.MType == "counter" && m.Delta != nil {
+		return strconv.FormatInt(*m.Delta, 10)
+	}
+
+	return ""
 }
