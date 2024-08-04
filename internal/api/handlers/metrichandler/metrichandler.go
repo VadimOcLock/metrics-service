@@ -202,7 +202,7 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 
 	var dto entity.Metrics
 	if err := json.NewDecoder(req.Body).Decode(&dto); err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Send()
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
 		return
@@ -213,8 +213,8 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 		}
 	}(req.Body)
 	if err := dto.Valid(); err != nil {
-		log.Error().Err(err)
-		http.Error(res, err.Error(), http.StatusBadRequest)
+		log.Error().Err(err).Send()
+		http.Error(res, err.Error(), http.StatusNotFound)
 
 		return
 	}

@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"time"
 
@@ -34,6 +36,16 @@ func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 
+		// Чтение и сохранение тела запроса
+		var requestBody bytes.Buffer
+		tee := io.TeeReader(r.Body, &requestBody)
+		body, err := io.ReadAll(tee)
+		if err != nil {
+			http.Error(w, "can't read request body", http.StatusInternalServerError)
+			return
+		}
+		r.Body = io.NopCloser(&requestBody) // Восстановление тела запроса
+
 		wrappedWriter := NewResponseWriterWrapper(w)
 
 		next.ServeHTTP(wrappedWriter, r)
@@ -45,7 +57,8 @@ func Logger(next http.Handler) http.Handler {
 			Str("uri", r.RequestURI).
 			Dur("duration", duration).
 			Int("status", wrappedWriter.statusCode).
-			Int("content_length", wrappedWriter.contentLength).
+			Int("content length", wrappedWriter.contentLength).
+			Str("request body", string(body)).
 			Msg("request completed")
 	})
 }
