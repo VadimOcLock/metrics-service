@@ -115,7 +115,12 @@ func (h *MetricHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 
 		return
 	}
-	vl, _ := strconv.ParseFloat(dto.Value, 64)
+	vl, err := strconv.ParseFloat(dto.Value, 64)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+
+		return
+	}
 	delta, _ := strconv.ParseInt(dto.Value, 10, 64)
 	bodyObj, err := h.MetricsUseCase.Update(req.Context(), metricusecase.MetricUpdateDTO{
 		MType: dto.Type,
