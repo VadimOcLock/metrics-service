@@ -1,8 +1,11 @@
 package worker
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -142,11 +145,30 @@ func SendMetric(_ context.Context, opts SendMetricOpts) error {
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
+	// Сериализация метрики в JSON
+	metricJSON, err := json.Marshal(metric)
+	if err != nil {
+		return fmt.Errorf("worker.SendMetric: failed to marshal metric: %w", err)
+	}
+
+	// Сжимаем сериализованные данные с помощью gzip
+	var buf bytes.Buffer
+	gzipWriter := gzip.NewWriter(&buf)
+	_, err = gzipWriter.Write(metricJSON)
+	if err != nil {
+		return fmt.Errorf("worker.SendMetric: failed to gzip metric: %w", err)
+	}
+	if err = gzipWriter.Close(); err != nil {
+		return fmt.Errorf("worker.SendMetric: failed to close gzip writer: %w", err)
+	}
+
 	url := opts.ServerAddress + "/update/"
 
 	resp, err := opts.Client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(metric).
+		SetHeader("Content-Encoding", "gzip").
+		SetHeader("Accept-Encoding", "gzip").
+		SetBody(buf.Bytes()).
 		Post(url)
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
