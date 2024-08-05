@@ -18,15 +18,18 @@ import (
 
 type MetricHandler struct {
 	MetricsUseCase MetricUseCase
+	FileUpdater    chan bool
 }
 
 var _ MetricUseCase = (*metricusecase.MetricUseCase)(nil)
 
 func NewMetricHandler(
 	uc MetricUseCase,
+	fileUpdater chan bool,
 ) MetricHandler {
 	return MetricHandler{
 		MetricsUseCase: uc,
+		FileUpdater:    fileUpdater,
 	}
 }
 
@@ -56,6 +59,9 @@ func (h *MetricHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 
 		return
 	}
+	// Перезапись данных в файл.
+	h.FileUpdater <- true
+
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	respBody, err := json.Marshal(bodyObj)
