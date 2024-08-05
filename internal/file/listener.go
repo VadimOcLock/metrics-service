@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/VadimOcLock/metrics-service/internal/config"
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
 	"github.com/rs/zerolog/log"
-	"os"
-	"time"
 )
 
 type Listener struct {
@@ -35,12 +36,12 @@ func (l *Listener) saveMetrics(filePath string, metrics []entity.Metrics) error 
 
 	var file *os.File
 	if l.Cfg.Restore {
-		file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE|os.O_APPEND, 0666)
+		file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE|os.O_APPEND, 0600)
 		if err != nil {
 			return err
 		}
 	} else {
-		file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		if err != nil {
 			return err
 		}
@@ -63,39 +64,49 @@ func (l *Listener) saveMetrics(filePath string, metrics []entity.Metrics) error 
 func (l *Listener) Run(ctx context.Context) error {
 	if l.Cfg.StoreInterval == 0 {
 		// Синхронно.
-		for {
-			select {
-			case <-ctx.Done():
-				err := l.writeMetrics(ctx)
-				if err != nil {
-					log.Error().Err(err)
-				}
-				return ctx.Err()
-			case <-l.FileUpdater:
-				err := l.writeMetrics(ctx)
-				if err != nil {
-					log.Error().Err(err)
-				}
-			}
-		}
+		return l.runSync(ctx)
 	} else {
 		// Периодически.
-		ticker := time.NewTicker(time.Duration(l.Cfg.StoreInterval) * time.Second)
-		defer ticker.Stop()
+		return l.runWithTimeout(ctx)
+	}
+}
 
-		for {
-			select {
-			case <-ctx.Done():
-				err := l.writeMetrics(ctx)
-				if err != nil {
-					log.Error().Err(err)
-				}
-				return ctx.Err()
-			case <-ticker.C:
-				err := l.writeMetrics(ctx)
-				if err != nil {
-					log.Error().Err(err)
-				}
+func (l *Listener) runSync(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			err := l.writeMetrics(ctx)
+			if err != nil {
+				log.Error().Err(err)
+			}
+
+			return ctx.Err()
+		case <-l.FileUpdater:
+			err := l.writeMetrics(ctx)
+			if err != nil {
+				log.Error().Err(err)
+			}
+		}
+	}
+}
+
+func (l *Listener) runWithTimeout(ctx context.Context) error {
+	ticker := time.NewTicker(time.Duration(l.Cfg.StoreInterval) * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			err := l.writeMetrics(ctx)
+			if err != nil {
+				log.Error().Err(err)
+			}
+
+			return ctx.Err()
+		case <-ticker.C:
+			err := l.writeMetrics(ctx)
+			if err != nil {
+				log.Error().Err(err)
 			}
 		}
 	}
@@ -124,13 +135,13 @@ func (l *Listener) metricsData(ctx context.Context) ([]entity.Metrics, error) {
 	}
 	var metrics []entity.Metrics
 	for _, md := range metricsData {
-		m, err := entity.BuildMetrics(entity.MetricDTO{
+		m, bErr := entity.BuildMetrics(entity.MetricDTO{
 			Type:  md.Type,
 			Name:  md.Name,
 			Value: fmt.Sprintf("%v", md.Value),
 		})
-		if err != nil {
-			return nil, fmt.Errorf("file.metricsData: %w", err)
+		if bErr != nil {
+			return nil, fmt.Errorf("file.metricsData: %w", bErr)
 		}
 		metrics = append(metrics, m)
 	}

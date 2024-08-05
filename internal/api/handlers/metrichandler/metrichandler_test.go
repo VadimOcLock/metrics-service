@@ -94,7 +94,7 @@ func updateMetricHandlerTestCases() []updateMetricHandlerTestCase {
 
 func TestMetricsHandler_UpdateMetric(t *testing.T) {
 	metricUseCase := mocks.NewMetricUseCase(t)
-	h := metrichandler.NewMetricHandler(metricUseCase)
+	h := metrichandler.NewMetricHandler(metricUseCase, nil)
 
 	tests := updateMetricHandlerTestCases()
 
@@ -245,7 +245,7 @@ func getMetricHandlerTestCases() []getMetricHandlerTestCase {
 
 func TestMetricsHandler_GetMetricValue(t *testing.T) {
 	metricUseCase := mocks.NewMetricUseCase(t)
-	h := metrichandler.NewMetricHandler(metricUseCase)
+	h := metrichandler.NewMetricHandler(metricUseCase, nil)
 
 	tests := getMetricHandlerTestCases()
 
@@ -358,7 +358,7 @@ func getAllMetricsHandlerTestCases() []getAllMetricsHandlerTestCase {
 
 func TestMetricsHandler_GetAllMetrics(t *testing.T) {
 	metricUseCase := mocks.NewMetricUseCase(t)
-	h := metrichandler.NewMetricHandler(metricUseCase)
+	h := metrichandler.NewMetricHandler(metricUseCase, nil)
 
 	tests := getAllMetricsHandlerTestCases()
 

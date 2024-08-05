@@ -106,6 +106,7 @@ type compressWriter struct {
 
 func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	gw := gzip.NewWriter(w)
+
 	return &compressWriter{
 		ResponseWriter: w,
 		gzipWriter:     gw,
@@ -139,6 +140,7 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &compressReader{
 		ReadCloser: r,
 		gzipReader: gr,
@@ -153,5 +155,6 @@ func (cr *compressReader) Close() error {
 	if err := cr.ReadCloser.Close(); err != nil {
 		return err
 	}
+
 	return cr.gzipReader.Close()
 }

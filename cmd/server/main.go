@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/VadimOcLock/metrics-service/internal/file"
-	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
 	"net/http"
 	"os"
 	"syscall"
 	"time"
+
+	"github.com/VadimOcLock/metrics-service/internal/file"
+	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
