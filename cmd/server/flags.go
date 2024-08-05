@@ -13,7 +13,7 @@ import (
 
 const (
 	defaultSrvAddr         = "localhost:8080"
-	defaultStoreInterval   = 300
+	defaultStoreInterval   = 30
 	defaultFileStoragePath = "./store_metrics.txt"
 	defaultRestore         = false
 )
