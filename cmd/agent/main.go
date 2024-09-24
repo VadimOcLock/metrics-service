@@ -31,7 +31,8 @@ func main() {
 	}
 
 	// Logger.
-	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+	log.Logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
+		With().Timestamp().Logger()
 
 	// Worker.
 	w := worker.NewMetricsWorker(worker.MetricsWorkerOpts{
