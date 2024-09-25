@@ -1,12 +1,16 @@
 package worker
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
 	"runtime"
+
+	"github.com/VadimOcLock/metrics-service/internal/compress"
 
 	"github.com/go-resty/resty/v2"
 
@@ -144,9 +148,20 @@ func SendMetric(_ context.Context, opts SendMetricOpts) error {
 	}
 	url := opts.ServerAddress + "/update/"
 
+	var buf bytes.Buffer
+	if err = json.NewEncoder(&buf).Encode(metric); err != nil {
+		return fmt.Errorf("worker.SendMetric: %w", err)
+	}
+	body, err := compress.GZipCompress(buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("worker.SendMetric: %w", err)
+	}
+
 	resp, err := opts.Client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(metric).
+		SetHeader("Content-Encoding", "gzip").
+		SetHeader("Accept-Encoding", "gzip").
+		SetBody(body).
 		Post(url)
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)

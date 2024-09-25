@@ -22,6 +22,7 @@ func New() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(chimiddleware.Recoverer)
+	r.Use(middleware.GZipMiddleware)
 
 	r.Get("/", mh.GetAllMetrics)
 	r.Route("/update", func(r chi.Router) {
