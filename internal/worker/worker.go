@@ -60,7 +60,7 @@ func (w *MetricsWorker) Run(ctx context.Context) error {
 					chanErr <- fmt.Errorf("worker.run: %w", err)
 				}
 				log.Debug().Msg("collect metric success")
-				pollTimer.Reset(w.Opts.PoolInterval)
+				defer pollTimer.Reset(w.Opts.PoolInterval)
 			}()
 		case <-reportTimer.C:
 			wg.Add(1)
@@ -71,7 +71,7 @@ func (w *MetricsWorker) Run(ctx context.Context) error {
 					chanErr <- fmt.Errorf("worker.run: %w", err)
 				}
 				log.Debug().Msg("send metric success")
-				reportTimer.Reset(w.Opts.ReportInterval)
+				defer reportTimer.Reset(w.Opts.ReportInterval)
 			}()
 		}
 	}

@@ -7,17 +7,10 @@ import (
 
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
-	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
-	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
-	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 	"github.com/go-chi/chi/v5"
 )
 
-func New() http.Handler {
-	store := somestore.New()
-	metricService := metricservice.New(&store)
-	metricUseCase := metricusecase.New(&metricService)
-	mh := NewMetricHandler(&metricUseCase)
+func New(mh MetricHandler) http.Handler {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

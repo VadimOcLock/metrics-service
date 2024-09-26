@@ -11,7 +11,12 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/config"
 )
 
-const defaultSrvAddr = "localhost:8080"
+const (
+	defaultSrvAddr         = "localhost:8080"
+	defaultBackupInterval  = 300
+	defaultFileStoragePath = "/backups/storage.txt"
+	defaultRestoreStorage  = true
+)
 
 type netAddress struct {
 	Host string
@@ -38,9 +43,17 @@ func (n *netAddress) Set(value string) error {
 }
 
 func parseFlags(cfg *config.WebServer) error {
-	var flagSrvAddr string
+	var (
+		flagSrvAddr         string
+		flagStoreInterval   int
+		flagFileStoragePath string
+		flagRestore         bool
+	)
 
 	flag.StringVar(&flagSrvAddr, "a", defaultSrvAddr, "server addr host and port")
+	flag.IntVar(&flagStoreInterval, "i", defaultBackupInterval, "interval store save to file")
+	flag.StringVar(&flagFileStoragePath, "f", defaultFileStoragePath, "path to store save file")
+	flag.BoolVar(&flagRestore, "r", defaultRestoreStorage, "restore metrics in file")
 
 	flag.Parse()
 
@@ -51,6 +64,15 @@ func parseFlags(cfg *config.WebServer) error {
 
 	if envVal := os.Getenv("ADDRESS"); envVal == "" {
 		cfg.WebServerConfig.SrvAddr = srvAddr.String()
+	}
+	if envVal := os.Getenv("STORE_INTERVAL"); envVal == "" {
+		cfg.BackupConfig.Interval = flagStoreInterval
+	}
+	if envVal := os.Getenv("FILE_STORAGE_PATH"); envVal == "" {
+		cfg.BackupConfig.FileStoragePath = flagFileStoragePath
+	}
+	if envVal := os.Getenv("RESTORE"); envVal == "" {
+		cfg.BackupConfig.Restore = flagRestore
 	}
 
 	return nil

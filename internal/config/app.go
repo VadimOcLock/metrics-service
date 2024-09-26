@@ -13,3 +13,9 @@ type AgentConfig struct {
 type WebServerConfig struct {
 	SrvAddr string `env:"ADDRESS"`
 }
+
+type BackupConfig struct {
+	Restore         bool   `env:"RESTORE" envDefault:"true"`
+	Interval        int    `env:"STORE_INTERVAL" envDefault:"300"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"./backups/storage.txt"`
+}

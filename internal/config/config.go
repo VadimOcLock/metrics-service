@@ -12,6 +12,7 @@ type Agent struct {
 type WebServer struct {
 	AppConfig
 	WebServerConfig
+	BackupConfig
 }
 
 func Load[T any]() (T, error) {
