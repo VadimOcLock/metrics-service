@@ -24,4 +24,6 @@ vendor/
 .idea
 .vscode
 
-backups/
+backups/*
+!backups/
+!backups/.gitkeep
