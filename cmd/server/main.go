@@ -65,6 +65,9 @@ func main() {
 		Interval: cfg.BackupConfig.Interval,
 		Filepath: cfg.BackupConfig.FileStoragePath,
 	})
+	if err != nil {
+		log.Fatal().Msgf("new backup worker err: %v", err)
+	}
 
 	// Run app.
 	tasks := taskgroup.New()
