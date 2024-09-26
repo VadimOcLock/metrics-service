@@ -15,7 +15,7 @@ type WebServerConfig struct {
 }
 
 type BackupConfig struct {
-	Restore         bool   `env:"RESTORE" envDefault:"true"`
-	Interval        int    `env:"STORE_INTERVAL" envDefault:"300"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"./backups/storage.txt"`
+	Restore         bool   `env:"RESTORE"`
+	Interval        int    `env:"STORE_INTERVAL"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }

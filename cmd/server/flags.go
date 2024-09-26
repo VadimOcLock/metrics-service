@@ -14,7 +14,7 @@ import (
 const (
 	defaultSrvAddr         = "localhost:8080"
 	defaultBackupInterval  = 300
-	defaultFileStoragePath = "/backups/storage.txt"
+	defaultFileStoragePath = "./backups/storage.txt"
 	defaultRestoreStorage  = true
 )
 
