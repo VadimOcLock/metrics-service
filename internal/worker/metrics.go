@@ -146,7 +146,7 @@ func SendMetric(_ context.Context, opts SendMetricOpts) error {
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
-	url := opts.ServerAddress + "/update/"
+	url := opts.ServerAddress + "/update"
 
 	var buf bytes.Buffer
 	if err = json.NewEncoder(&buf).Encode(metric); err != nil {

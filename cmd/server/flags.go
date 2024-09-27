@@ -1,9 +1,9 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"os"
 	"strconv"
 	"strings"
@@ -30,7 +30,7 @@ func (n *netAddress) String() string {
 func (n *netAddress) Set(value string) error {
 	parts := strings.Split(value, ":")
 	if len(parts) != 2 {
-		return errors.New("invalid address format, expected host:port")
+		return errorz.ErrInvalidAddressFormat
 	}
 	port, err := strconv.Atoi(parts[1])
 	if err != nil {

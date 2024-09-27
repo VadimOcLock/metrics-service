@@ -46,8 +46,8 @@ type FindAllMetricsParams struct {
 }
 
 func (i *Impl) FindAllMetrics(_ context.Context, _ FindAllMetricsParams) ([]entity.Metric, error) {
-	i.s.mu.Lock()
-	defer i.s.mu.Unlock()
+	i.s.mu.RLock()
+	defer i.s.mu.RUnlock()
 	var metrics []entity.Metric
 	for n, v := range i.s.gauges {
 		metrics = append(metrics, entity.Metric{
@@ -72,8 +72,8 @@ type FindCounterMetricParams struct {
 }
 
 func (i *Impl) FindCounterMetric(_ context.Context, arg FindCounterMetricParams) (entity.Metric, error) {
-	i.s.mu.Lock()
-	defer i.s.mu.Unlock()
+	i.s.mu.RLock()
+	defer i.s.mu.RUnlock()
 	metricValue, ok := i.s.counters[arg.MetricName]
 	if !ok {
 		return entity.Metric{}, errorz.ErrUndefinedMetricName
@@ -91,8 +91,8 @@ type FindGaugeMetricParams struct {
 }
 
 func (i *Impl) FindGaugeMetric(_ context.Context, arg FindGaugeMetricParams) (entity.Metric, error) {
-	i.s.mu.Lock()
-	defer i.s.mu.Unlock()
+	i.s.mu.RLock()
+	defer i.s.mu.RUnlock()
 	metricValue, ok := i.s.gauges[arg.MetricName]
 	if !ok {
 		return entity.Metric{}, errorz.ErrUndefinedMetricName

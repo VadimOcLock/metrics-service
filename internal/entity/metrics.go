@@ -1,8 +1,8 @@
 package entity
 
 import (
-	"errors"
 	"fmt"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"strconv"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
@@ -99,13 +99,13 @@ func (m *Metrics) MetricValue() (string, error) {
 			return strconv.FormatFloat(*m.Value, 'f', -1, 64), nil
 		}
 
-		return "", errors.New("value is nil for gauge type")
+		return "", errorz.ErrGaugeTypeNilValue
 	case enum.CounterMetricType:
 		if m.Delta != nil {
 			return strconv.FormatInt(*m.Delta, 10), nil
 		}
 
-		return "", errors.New("delta is nil for counter type")
+		return "", errorz.ErrCounterTypeNilDelta
 	default:
 		return "", fmt.Errorf("unknown metric type: %s", m.MType)
 	}
@@ -116,11 +116,11 @@ func (m *Metrics) Valid() error {
 	switch m.MType {
 	case enum.GaugeMetricType:
 		if m.Value == nil {
-			return errors.New("value is nil for gauge type")
+			return errorz.ErrGaugeTypeNilValue
 		}
 	case enum.CounterMetricType:
 		if m.Delta == nil {
-			return errors.New("delta is nil for counter type")
+			return errorz.ErrCounterTypeNilDelta
 		}
 	default:
 		return fmt.Errorf("unknown metric type: %s", m.MType)

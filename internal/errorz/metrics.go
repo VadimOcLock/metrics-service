@@ -10,6 +10,9 @@ var (
 	ErrUpdateMetricFailed     = errors.New("update metric failed")
 	ErrSendMetricStatusNotOK  = errors.New("send metric status not ok")
 	ErrCantConvertAnyToString = errors.New("cant convert any to string")
+	ErrInvalidAddressFormat   = errors.New("invalid address format, expected host:port")
+	ErrGaugeTypeNilValue      = errors.New("value is nil for gauge type")
+	ErrCounterTypeNilDelta    = errors.New("delta is nil for counter type")
 )
 
 const (
