@@ -19,7 +19,7 @@ func New(mh MetricHandler, pool *pgx.Conn) http.Handler {
 
 	r.Get("/", mh.GetAllMetrics)
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		if err := pool.Ping(r.Context()); err != nil {
+		if err := pool.Ping(r.Context()); err != nil || pool == nil {
 			http.Error(w, "database unavailable now", http.StatusInternalServerError)
 
 			return
