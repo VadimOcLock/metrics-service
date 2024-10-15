@@ -16,7 +16,7 @@ const (
 	defaultBackupInterval  = 300
 	defaultFileStoragePath = "./backups/storage.txt"
 	defaultRestoreStorage  = true
-	defaultDatabaseDSN     = "postgres://admin:root@localhost:5432/test_db?sslmode=disable"
+	defaultDatabaseDSN     = ""
 )
 
 type netAddress struct {

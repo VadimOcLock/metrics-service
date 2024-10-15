@@ -45,7 +45,8 @@ func main() {
 	// Database pool.
 	dbPool, err := pgx.Connect(ctx, cfg.DatabaseConfig.DSN)
 	if err != nil {
-		log.Fatal().Msgf("db connection err: %v", err)
+		//log.Fatal().Msgf("db connection err: %v", err)
+		log.Error().Msgf("db connect err: %v", err)
 	}
 	defer func(dbPool *pgx.Conn, ctx context.Context) {
 		_ = dbPool.Close(ctx)
