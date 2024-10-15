@@ -1,45 +1,16 @@
-#version: '3.8'
-#
-#services:
-#  db:
-#    image: postgres:latest
-#    restart: always
-#    environment:
-#      POSTGRES_USER: myuser
-#      POSTGRES_PASSWORD: mypassword
-#      POSTGRES_DB: mydatabase
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - postgres:/data/postgres
-##      - ./init-scripts:/docker-entrypoint-initdb.d
-#
-#volumes:
-#  postgres:
-#
-##  postgres:
-##    image: postgres:14-alpine
-##    ports:
-##      - 5432:5432
-##    volumes:
-##      - ~/apps/postgres:/var/lib/postgresql/data
-##    environment:
-##      - POSTGRES_PASSWORD=S3cret
-##      - POSTGRES_USER=citizix_user
-##      - POSTGRES_DB=citizix_db
-
-
-version: "3.8"
+version: '3.8'
 services:
-  postgres:
-    image: postgres:14-alpine
+  db:
+    image: postgres:14.1-alpine
     restart: always
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres_db
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - db:/var/lib/postgresql/data
 volumes:
   db:
+    driver: local
