@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5"
 	"net/http"
 	"os"
 	"syscall"
@@ -41,6 +42,15 @@ func main() {
 	log.Logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
 		With().Timestamp().Logger()
 
+	// Database pool.
+	dbPool, err := pgx.Connect(ctx, cfg.DatabaseConfig.DSN)
+	if err != nil {
+		log.Fatal().Msgf("db connection err: %v", err)
+	}
+	defer func(dbPool *pgx.Conn, ctx context.Context) {
+		_ = dbPool.Close(ctx)
+	}(dbPool, ctx)
+
 	// Store.
 	store := somestore.New()
 
@@ -52,7 +62,7 @@ func main() {
 
 	// Handler.
 	mh := metrichandler.NewMetricHandler(&metricUseCase)
-	mux := metrichandler.New(mh)
+	mux := metrichandler.New(mh, dbPool)
 	server := &http.Server{
 		Addr:              cfg.WebServerConfig.SrvAddr,
 		Handler:           mux,

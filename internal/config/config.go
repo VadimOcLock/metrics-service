@@ -13,6 +13,7 @@ type WebServer struct {
 	AppConfig
 	WebServerConfig
 	BackupConfig
+	DatabaseConfig
 }
 
 func Load[T any]() (T, error) {

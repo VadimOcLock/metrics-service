@@ -16,6 +16,7 @@ const (
 	defaultBackupInterval  = 300
 	defaultFileStoragePath = "./backups/storage.txt"
 	defaultRestoreStorage  = true
+	defaultDatabaseDSN     = "postgres://admin:root@localhost:5432/test_db?sslmode=disable"
 )
 
 type netAddress struct {
@@ -48,12 +49,14 @@ func parseFlags(cfg *config.WebServer) error {
 		flagStoreInterval   int
 		flagFileStoragePath string
 		flagRestore         bool
+		flagDatabaseDSN     string
 	)
 
 	flag.StringVar(&flagSrvAddr, "a", defaultSrvAddr, "server addr host and port")
 	flag.IntVar(&flagStoreInterval, "i", defaultBackupInterval, "interval store save to file")
 	flag.StringVar(&flagFileStoragePath, "f", defaultFileStoragePath, "path to store save file")
 	flag.BoolVar(&flagRestore, "r", defaultRestoreStorage, "restore metrics in file")
+	flag.StringVar(&flagDatabaseDSN, "d", defaultDatabaseDSN, "database dsn")
 
 	flag.Parse()
 
@@ -73,6 +76,9 @@ func parseFlags(cfg *config.WebServer) error {
 	}
 	if envVal := os.Getenv("RESTORE"); envVal == "" {
 		cfg.BackupConfig.Restore = flagRestore
+	}
+	if envVal := os.Getenv("DATABASE_DSN"); envVal == "" {
+		cfg.DatabaseConfig.DSN = flagDatabaseDSN
 	}
 
 	return nil

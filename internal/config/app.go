@@ -19,3 +19,7 @@ type BackupConfig struct {
 	Interval        int    `env:"STORE_INTERVAL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
+
+type DatabaseConfig struct {
+	DSN string `env:"DATABASE_DSN"`
+}
