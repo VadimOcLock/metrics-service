@@ -53,8 +53,8 @@ func (i *Impl) FindGaugeMetrics(ctx context.Context, arg metricservice.FindGauge
 	}
 
 	return entity.Metrics{
-		ID:    enum.GaugeMetricType,
-		MType: arg.MetricName,
+		ID:    arg.MetricName,
+		MType: enum.CounterMetricType,
 		Value: &vl,
 	}, nil
 }
@@ -68,8 +68,8 @@ func (i *Impl) FindCounterMetrics(_ context.Context, arg metricservice.FindCount
 	}
 
 	return entity.Metrics{
-		ID:    enum.CounterMetricType,
-		MType: arg.MetricName,
+		ID:    arg.MetricName,
+		MType: enum.CounterMetricType,
 		Delta: &vl,
 	}, nil
 }
