@@ -118,7 +118,8 @@ func (q *Queries) FindGaugeMetrics(ctx context.Context, arg metricservice.FindGa
 
 const updateBatch = `
 insert into metrics (id, type, delta, value)
-values %s;
+values %s
+ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, value = EXCLUDED.value;
 `
 
 func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
