@@ -2,8 +2,11 @@ package pgstore
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"github.com/rs/zerolog/log"
 )
@@ -94,6 +97,9 @@ func (q *Queries) FindCounterMetrics(ctx context.Context, arg metricservice.Find
 		&m.ID,
 		&m.MType,
 		&m.Delta)
+	if errors.Is(err, sql.ErrNoRows) {
+		return entity.Metrics{}, errorz.ErrMetricNotFound
+	}
 
 	return m, err
 }
@@ -111,6 +117,9 @@ func (q *Queries) FindGaugeMetrics(ctx context.Context, arg metricservice.FindGa
 		&m.ID,
 		&m.MType,
 		&m.Value)
+	if errors.Is(err, sql.ErrNoRows) {
+		return entity.Metrics{}, errorz.ErrMetricNotFound
+	}
 
 	return m, err
 }

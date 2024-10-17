@@ -15,6 +15,7 @@ var (
 	ErrCounterTypeNilDelta     = errors.New("delta is nil for counter type")
 	ErrIncorrectDatabaseSchema = errors.New("incorrect database schema")
 	ErrNoSpecifiedDatabaseName = errors.New("no database name specified")
+	ErrMetricNotFound          = errors.New("metric not found")
 )
 
 const (

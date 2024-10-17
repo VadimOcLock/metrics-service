@@ -248,7 +248,8 @@ func GetMetricsValidateErr(err error) bool {
 	return errors.Is(err, errorz.ErrUndefinedMetricType) ||
 		errors.Is(err, errorz.ErrUndefinedMetricName) ||
 		errors.Is(err, errorz.ErrGaugeTypeNilValue) ||
-		errors.Is(err, errorz.ErrCounterTypeNilDelta)
+		errors.Is(err, errorz.ErrCounterTypeNilDelta) ||
+		errors.Is(err, errorz.ErrMetricNotFound)
 }
 
 func (h *MetricHandler) UpdateMetricBatch(res http.ResponseWriter, req *http.Request) {
