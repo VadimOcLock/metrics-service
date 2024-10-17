@@ -3,10 +3,9 @@ package pgstore
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
+	"strings"
 )
 
 const upsertGaugeMetric = `
@@ -122,6 +121,42 @@ values %s
 ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, value = EXCLUDED.value;
 `
 
+func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
+	return s.ExecTx(ctx, func(q *Queries) error {
+		const batchSize = 100
+		metrics := *arg.Data
+		for i := 0; i < len(metrics); i += batchSize {
+			end := i + batchSize
+			if end > len(metrics) {
+				end = len(metrics)
+			}
+			batch := metrics[i:end]
+
+			// Prepare the insert statement
+			valueStrings := make([]string, 0, len(batch))
+			valueArgs := make([]interface{}, 0, len(batch)*4)
+
+			for _, metric := range batch {
+				valueStrings = append(valueStrings, "(?, ?, ?, ?)")
+				valueArgs = append(valueArgs, metric.ID, metric.MType, metric.Delta, metric.Value)
+			}
+
+			query := fmt.Sprintf(`
+				INSERT INTO metrics (id, type, delta, value)
+				VALUES %s
+				ON CONFLICT (id) 
+				DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, value = EXCLUDED.value`,
+				strings.Join(valueStrings, ","))
+
+			_, err := q.db.Exec(ctx, query, valueArgs...)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 //func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
 //	return s.ExecTx(ctx, func(q *Queries) error {
 //		const batchSize = 100
@@ -136,12 +171,16 @@ ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, val
 //			values := make([]string, 0, len(batch))
 //			args := make([]interface{}, 0, len(batch)*4)
 //
-//			for _, metric := range batch {
-//				values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d)",
-//					len(args)+1, len(args)+2, len(args)+3, len(args)+4))
-//				args = append(args, metric.ID, metric.MType, metric.Delta, metric.Value)
-//			}
+//			uniqueMetrics := make(map[string]entity.Metrics)
 //
+//			for _, metric := range batch {
+//				if _, exists := uniqueMetrics[metric.ID]; !exists {
+//					uniqueMetrics[metric.ID] = metric
+//					values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d)",
+//						len(args)+1, len(args)+2, len(args)+3, len(args)+4))
+//					args = append(args, metric.ID, metric.MType, metric.Delta, metric.Value)
+//				}
+//			}
 //			query := fmt.Sprintf(updateBatch, strings.Join(values, ", "))
 //
 //			if _, err := q.db.Exec(ctx, query, args...); err != nil {
@@ -151,37 +190,3 @@ ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, val
 //		return nil
 //	})
 //}
-
-func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
-	return s.ExecTx(ctx, func(q *Queries) error {
-		const batchSize = 100
-		metrics := *arg.Data
-		for i := 0; i < len(metrics); i += batchSize {
-			end := i + batchSize
-			if end > len(metrics) {
-				end = len(metrics)
-			}
-			batch := metrics[i:end]
-
-			values := make([]string, 0, len(batch))
-			args := make([]interface{}, 0, len(batch)*4)
-
-			uniqueMetrics := make(map[string]entity.Metrics)
-
-			for _, metric := range batch {
-				if _, exists := uniqueMetrics[metric.ID]; !exists {
-					uniqueMetrics[metric.ID] = metric
-					values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d)",
-						len(args)+1, len(args)+2, len(args)+3, len(args)+4))
-					args = append(args, metric.ID, metric.MType, metric.Delta, metric.Value)
-				}
-			}
-			query := fmt.Sprintf(updateBatch, strings.Join(values, ", "))
-
-			if _, err := q.db.Exec(ctx, query, args...); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-}
