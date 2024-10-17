@@ -3,6 +3,7 @@ package migrations
 import (
 	"database/sql"
 	"errors"
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"net/url"
 	"strings"
 
@@ -50,18 +51,13 @@ func dbNameByDSN(dsn string) (string, error) {
 	}
 
 	if parsedURL.Scheme != "postgres" {
-		return "", IncorrectDatabaseSchemaError
+		return "", errorz.ErrIncorrectDatabaseSchema
 	}
 
 	dbName := strings.TrimPrefix(parsedURL.Path, "/")
 	if dbName == "" {
-		return "", NoSpecifiedDatabaseNameError
+		return "", errorz.ErrNoSpecifiedDatabaseName
 	}
 
 	return dbName, nil
 }
-
-var (
-	IncorrectDatabaseSchemaError = errors.New("incorrect database schema")
-	NoSpecifiedDatabaseNameError = errors.New("no database name specified")
-)

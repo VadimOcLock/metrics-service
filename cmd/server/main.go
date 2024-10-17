@@ -57,7 +57,7 @@ func main() {
 	dbPool, err := pg.New(ctx, pg.Config{
 		DSN: cfg.DatabaseConfig.DSN,
 	})
-	if err != nil {
+	if err != nil && !cfg.DatabaseConfig.InMemoryMode() {
 		log.Fatal().Msgf("database connect err: %v", err)
 	}
 	defer dbPool.Close()
