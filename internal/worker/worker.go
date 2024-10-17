@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/VadimOcLock/metrics-service/pkg/retry"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
@@ -66,7 +68,9 @@ func (w *MetricsWorker) Run(ctx context.Context) error {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				err := w.sendMetrics(ctx, &metrics)
+				err := retry.RunCtx(ctx, time.Second, func(ctx context.Context) error {
+					return w.sendMetrics(ctx, &metrics)
+				})
 				if err != nil {
 					chanErr <- fmt.Errorf("worker.run: %w", err)
 				}
