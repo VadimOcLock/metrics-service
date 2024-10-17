@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 
 	"github.com/VadimOcLock/metrics-service/internal/config"
 )

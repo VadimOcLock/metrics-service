@@ -4,15 +4,34 @@ import (
 	"context"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
-	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
 )
 
 type Store interface {
-	UpdateGaugeMetric(ctx context.Context, arg somestore.UpdateGaugeMetricParams) (bool, error)
-	FindGaugeMetric(ctx context.Context, arg somestore.FindGaugeMetricParams) (entity.Metric, error)
-	FindCounterMetric(ctx context.Context, arg somestore.FindCounterMetricParams) (entity.Metric, error)
-	UpdateCounterMetric(ctx context.Context, arg somestore.UpdateCounterMetricParams) (bool, error)
-	FindAllMetrics(ctx context.Context, arg somestore.FindAllMetricsParams) ([]entity.Metric, error)
+	UpsertGaugeMetric(ctx context.Context, arg UpsertGaugeMetricParams) (bool, error)
+	UpsertCounterMetric(ctx context.Context, arg UpsertCounterMetricParams) (bool, error)
+	FindGaugeMetrics(ctx context.Context, arg FindGaugeMetricParams) (entity.Metrics, error)
+	FindCounterMetrics(ctx context.Context, arg FindCounterMetricParams) (entity.Metrics, error)
+	FindAllMetrics(ctx context.Context, arg FindAllMetricsNewParams) ([]entity.Metrics, error)
 }
 
-var _ Store = (*somestore.Impl)(nil)
+type UpsertGaugeMetricParams struct {
+	Name  string
+	Value float64
+}
+
+type FindGaugeMetricParams struct {
+	MetricName string
+}
+
+type FindCounterMetricParams struct {
+	MetricName string
+}
+
+type UpsertCounterMetricParams struct {
+	Name  string
+	Value int64
+}
+
+type FindAllMetricsParams struct{}
+
+type FindAllMetricsNewParams struct{}

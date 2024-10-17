@@ -171,7 +171,9 @@ func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 		MetricName: metricName,
 	})
 	if errors.Is(err, errorz.ErrUndefinedMetricType) ||
-		errors.Is(err, errorz.ErrUndefinedMetricName) {
+		errors.Is(err, errorz.ErrUndefinedMetricName) ||
+		errors.Is(err, errorz.ErrGaugeTypeNilValue) ||
+		errors.Is(err, errorz.ErrCounterTypeNilDelta) {
 		http.Error(res, err.Error(), http.StatusNotFound)
 
 		return

@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5"
 	"net/http"
 	"os"
 	"syscall"
 	"time"
 
+	"github.com/VadimOcLock/metrics-service/internal/store/migrations"
+
+	"github.com/VadimOcLock/metrics-service/internal/store/pgstore"
+	"github.com/VadimOcLock/metrics-service/pkg/pg"
+
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
-	"github.com/VadimOcLock/metrics-service/internal/store/somestore"
+	"github.com/VadimOcLock/metrics-service/internal/store/inmemorystore"
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 	"github.com/VadimOcLock/metrics-service/internal/worker"
 
@@ -22,6 +26,13 @@ import (
 
 	"github.com/VadimOcLock/metrics-service/pkg/lifecycle"
 	"github.com/safeblock-dev/wr/taskgroup"
+
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+)
+
+const (
+	migrationsPath = "file://internal/store/migrations"
+	inMemoryMode   = true
 )
 
 func main() {
@@ -43,20 +54,28 @@ func main() {
 		With().Timestamp().Logger()
 
 	// Database pool.
-	dbPool, err := pgx.Connect(ctx, cfg.DatabaseConfig.DSN)
+	dbPool, err := pg.New(ctx, pg.Config{
+		DSN: cfg.DatabaseConfig.DSN,
+	})
 	if err != nil {
-		//log.Fatal().Msgf("db connection err: %v", err)
-		log.Error().Msgf("db connect err: %v", err)
+		log.Fatal().Msgf("database connect err: %v", err)
 	}
-	defer func(dbPool *pgx.Conn, ctx context.Context) {
-		_ = dbPool.Close(ctx)
-	}(dbPool, ctx)
+	defer dbPool.Close()
 
 	// Store.
-	store := somestore.New()
+	var store metricservice.Store
+	if cfg.DatabaseConfig.InMemoryMode() {
+		store = inmemorystore.New()
+	} else {
+		// Migrations.
+		if err = migrations.Run(cfg.DatabaseConfig.DSN, migrationsPath); err != nil {
+			log.Fatal().Msgf("migrations err: %v", err)
+		}
+		store = pgstore.NewPgStore(dbPool)
+	}
 
 	// Service.
-	metricService := metricservice.New(&store)
+	metricService := metricservice.New(store)
 
 	// UseCase.
 	metricUseCase := metricusecase.New(&metricService)
@@ -83,7 +102,9 @@ func main() {
 	// Run app.
 	tasks := taskgroup.New()
 	tasks.Add(taskgroup.SignalHandler(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM))
-	tasks.Add(lifecycle.Worker(bw))
+	if cfg.DatabaseConfig.InMemoryMode() {
+		tasks.Add(lifecycle.Worker(bw))
+	}
 	tasks.Add(lifecycle.HTTPServer(server))
 	if err = tasks.Run(); err != nil {
 		log.Debug().Msgf("tasks shutdown err: %v", err)

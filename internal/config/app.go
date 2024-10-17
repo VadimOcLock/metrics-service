@@ -23,3 +23,7 @@ type BackupConfig struct {
 type DatabaseConfig struct {
 	DSN string `env:"DATABASE_DSN"`
 }
+
+func (m *DatabaseConfig) InMemoryMode() bool {
+	return m.DSN == ""
+}

@@ -2,8 +2,9 @@ package entity
 
 import (
 	"fmt"
-	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"strconv"
+
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 )

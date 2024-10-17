@@ -51,7 +51,7 @@ func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (Metri
 
 	metrics, err := entity.BuildMetrics(entity.MetricDTO(dto))
 	if err != nil {
-		return MetricUpdateResp{}, fmt.Errorf("build err: %w", err)
+		return MetricUpdateResp{}, fmt.Errorf("metricusecase.Update: %w", err)
 	}
 
 	return MetricUpdateResp{
@@ -65,7 +65,7 @@ func (uc *MetricUseCase) FindAll(ctx context.Context, _ MetricFindAllDTO) (Metri
 	if err != nil {
 		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
 	}
-	html, err := buildHTML(metrics)
+	html, err := buildHTMLNew(metrics)
 	if err != nil {
 		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
 	}
@@ -83,18 +83,13 @@ func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFin
 	if err != nil {
 		return MetricFindResp{}, fmt.Errorf("metricusecase.Find: %w", err)
 	}
-
-	metrics, err := entity.BuildMetrics(entity.MetricDTO{
-		Type:  dto.MetricType,
-		Name:  dto.MetricName,
-		Value: fmt.Sprintf("%v", m.Value),
-	})
+	mVal, err := m.MetricValue()
 	if err != nil {
 		return MetricFindResp{}, fmt.Errorf("metricusecase.Find: %w", err)
 	}
 
 	return MetricFindResp{
-		MetricValue: fmt.Sprintf("%v", m.Value),
-		Data:        &metrics,
+		MetricValue: mVal,
+		Data:        &m,
 	}, nil
 }

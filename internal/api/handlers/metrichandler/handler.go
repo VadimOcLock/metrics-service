@@ -1,8 +1,9 @@
 package metrichandler
 
 import (
-	"github.com/jackc/pgx/v5"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/VadimOcLock/metrics-service/internal/api/handlers/middleware"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func New(mh MetricHandler, pool *pgx.Conn) http.Handler {
+func New(mh MetricHandler, pool *pgxpool.Pool) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(chimiddleware.Recoverer)

@@ -1,8 +1,6 @@
 package metricservice
 
-import "github.com/VadimOcLock/metrics-service/internal/store/somestore"
-
-type UpdateGaugeDTO somestore.UpdateGaugeMetricParams
+type UpdateGaugeDTO UpsertGaugeMetricParams
 
 func (dto *UpdateGaugeDTO) Valid() error {
 	// todo
@@ -10,7 +8,7 @@ func (dto *UpdateGaugeDTO) Valid() error {
 	return nil
 }
 
-type UpdateCounterDTO somestore.UpdateCounterMetricParams
+type UpdateCounterDTO UpsertCounterMetricParams
 
 func (dto *UpdateCounterDTO) Valid() error {
 	// todo
@@ -18,7 +16,7 @@ func (dto *UpdateCounterDTO) Valid() error {
 	return nil
 }
 
-type FindAllDTO somestore.FindAllMetricsParams
+type FindAllDTO FindAllMetricsParams
 
 func (dto *FindAllDTO) Valid() error {
 	// todo
