@@ -1,16 +1,16 @@
 package metricservice
 
-type UpsertGaugeDTO UpsertGaugeMetricParams
+type UpdateGaugeDTO UpsertGaugeMetricParams
 
-func (dto *UpsertGaugeDTO) Valid() error {
+func (dto *UpdateGaugeDTO) Valid() error {
 	// todo
 
 	return nil
 }
 
-type UpsertCounterDTO UpsertCounterMetricParams
+type UpdateCounterDTO UpsertCounterMetricParams
 
-func (dto *UpsertCounterDTO) Valid() error {
+func (dto *UpdateCounterDTO) Valid() error {
 	// todo
 
 	return nil

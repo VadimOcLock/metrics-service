@@ -9,28 +9,22 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
 )
 
-func (s *Service) UpdateGauge(ctx context.Context, dto UpsertGaugeDTO) error {
+func (s *Service) UpdateGauge(ctx context.Context, dto UpdateGaugeDTO) error {
 	if err := dto.Valid(); err != nil {
 		return fmt.Errorf("metricservice.UpdateGauge: %w", err)
 	}
-	if _, err := s.Store.UpsertGaugeMetric(ctx, UpsertGaugeMetricParams{
-		Name:  dto.Name,
-		Value: dto.Value,
-	}); err != nil {
+	if _, err := s.Store.UpsertGaugeMetric(ctx, UpsertGaugeMetricParams(dto)); err != nil {
 		return fmt.Errorf("metricservice.UpdateGauge: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Service) UpdateCounter(ctx context.Context, dto UpsertCounterDTO) error {
+func (s *Service) UpdateCounter(ctx context.Context, dto UpdateCounterDTO) error {
 	if err := dto.Valid(); err != nil {
 		return fmt.Errorf("metricservice.UpdateCounter: %w", err)
 	}
-	if _, err := s.Store.UpsertCounterMetric(ctx, UpsertCounterMetricParams{
-		Name:  dto.Name,
-		Value: dto.Value,
-	}); err != nil {
+	if _, err := s.Store.UpsertCounterMetric(ctx, UpsertCounterMetricParams(dto)); err != nil {
 		return fmt.Errorf("metricservice.UpdateCounter: %w", err)
 	}
 

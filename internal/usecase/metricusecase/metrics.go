@@ -23,7 +23,7 @@ func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (Metri
 		if dto.Name == "" {
 			return MetricUpdateResp{}, errorz.ErrInvalidMetricName
 		}
-		err = uc.metricService.UpdateGauge(ctx, metricservice.UpsertGaugeDTO{
+		err = uc.metricService.UpdateGauge(ctx, metricservice.UpdateGaugeDTO{
 			Name:  dto.Name,
 			Value: vl,
 		})
@@ -38,7 +38,7 @@ func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (Metri
 		if dto.Name == "" {
 			return MetricUpdateResp{}, errorz.ErrInvalidMetricName
 		}
-		err = uc.metricService.UpdateCounter(ctx, metricservice.UpsertCounterDTO{
+		err = uc.metricService.UpdateCounter(ctx, metricservice.UpdateCounterDTO{
 			Name:  dto.Name,
 			Value: vl,
 		})
