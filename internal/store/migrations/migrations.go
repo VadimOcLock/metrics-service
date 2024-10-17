@@ -3,9 +3,10 @@ package migrations
 import (
 	"database/sql"
 	"errors"
-	"github.com/VadimOcLock/metrics-service/internal/errorz"
 	"net/url"
 	"strings"
+
+	"github.com/VadimOcLock/metrics-service/internal/errorz"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/pgx/v5"

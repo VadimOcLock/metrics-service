@@ -99,6 +99,24 @@ func (_m *MetricUseCase) Update(ctx context.Context, dto metricusecase.MetricUpd
 	return r0, r1
 }
 
+// UpdateBatch provides a mock function with given fields: ctx, dto
+func (_m *MetricUseCase) UpdateBatch(ctx context.Context, dto metricusecase.MetricsUpdateBatchDTO) error {
+	ret := _m.Called(ctx, dto)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateBatch")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, metricusecase.MetricsUpdateBatchDTO) error); ok {
+		r0 = rf(ctx, dto)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewMetricUseCase creates a new instance of MetricUseCase. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMetricUseCase(t interface {
