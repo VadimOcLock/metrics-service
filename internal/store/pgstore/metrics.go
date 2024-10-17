@@ -35,7 +35,7 @@ values ($1, 'counter', $2, null)
 on conflict (id)
 do update set
     type = EXCLUDED.type,
-    delta = EXCLUDED.delta,
+    delta = metrics.delta + EXCLUDED.delta,
     value = EXCLUDED.value
 returning true as updated;
 `
