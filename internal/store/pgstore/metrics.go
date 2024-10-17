@@ -2,10 +2,10 @@ package pgstore
 
 import (
 	"context"
-	"fmt"
 	"github.com/VadimOcLock/metrics-service/internal/entity"
+	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
-	"strings"
+	"github.com/rs/zerolog/log"
 )
 
 const upsertGaugeMetric = `
@@ -123,34 +123,29 @@ ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, val
 
 func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
 	return s.ExecTx(ctx, func(q *Queries) error {
-		const batchSize = 100
 		metrics := *arg.Data
-		for i := 0; i < len(metrics); i += batchSize {
-			end := i + batchSize
-			if end > len(metrics) {
-				end = len(metrics)
-			}
-			batch := metrics[i:end]
-
-			valueStrings := make([]string, 0, len(batch))
-			valueArgs := make([]interface{}, 0, len(batch)*4)
-
-			for _, metric := range batch {
-				valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d)",
-					len(valueArgs)+1, len(valueArgs)+2, len(valueArgs)+3, len(valueArgs)+4))
-				valueArgs = append(valueArgs, metric.ID, metric.MType, metric.Delta, metric.Value)
-			}
-
-			query := fmt.Sprintf(`
-				INSERT INTO metrics (id, type, delta, value)
-				VALUES %s
-				ON CONFLICT (id) 
-				DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, value = EXCLUDED.value`,
-				strings.Join(valueStrings, ","))
-
-			_, err := q.db.Exec(ctx, query, valueArgs...)
-			if err != nil {
-				return err
+		for _, m := range metrics {
+			switch m.MType {
+			case enum.GaugeMetricType:
+				if m.Value != nil {
+					_, err := q.UpsertGaugeMetric(ctx, metricservice.UpsertGaugeMetricParams{
+						Name:  m.ID,
+						Value: *m.Value,
+					})
+					if err != nil {
+						log.Error().Msgf("Error upserting gauge metric: %v", err)
+					}
+				}
+			case enum.CounterMetricType:
+				if m.Delta != nil {
+					_, err := q.UpsertCounterMetric(ctx, metricservice.UpsertCounterMetricParams{
+						Name:  m.ID,
+						Value: *m.Delta,
+					})
+					if err != nil {
+						log.Error().Msgf("Error upserting counter metric: %v", err)
+					}
+				}
 			}
 		}
 		return nil
