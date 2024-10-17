@@ -132,12 +132,12 @@ func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.Up
 			}
 			batch := metrics[i:end]
 
-			// Prepare the insert statement
 			valueStrings := make([]string, 0, len(batch))
 			valueArgs := make([]interface{}, 0, len(batch)*4)
 
 			for _, metric := range batch {
-				valueStrings = append(valueStrings, "(?, ?, ?, ?)")
+				valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d)",
+					len(valueArgs)+1, len(valueArgs)+2, len(valueArgs)+3, len(valueArgs)+4))
 				valueArgs = append(valueArgs, metric.ID, metric.MType, metric.Delta, metric.Value)
 			}
 
