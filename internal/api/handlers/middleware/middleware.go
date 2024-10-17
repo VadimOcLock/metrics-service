@@ -40,7 +40,7 @@ func Logger(next http.Handler) http.Handler {
 
 		var requestBody bytes.Buffer
 		tee := io.TeeReader(r.Body, &requestBody)
-		body, err := io.ReadAll(tee)
+		_, err := io.ReadAll(tee)
 		if err != nil {
 			http.Error(w, "can't read request body", http.StatusInternalServerError)
 			return
@@ -59,7 +59,6 @@ func Logger(next http.Handler) http.Handler {
 			Dur("duration", duration).
 			Int("status", wrappedWriter.statusCode).
 			Int("content length", wrappedWriter.contentLength).
-			Str("request body", string(body)).
 			Msg("request completed")
 
 	})

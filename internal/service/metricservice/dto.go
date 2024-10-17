@@ -34,3 +34,7 @@ func (dto *FindDTO) Valid() error {
 
 	return nil
 }
+
+type UpdateBatchDTO UpdateMetricsBatchTxParams
+
+func (m *UpdateBatchDTO) Valid() error { return nil }

@@ -1,6 +1,8 @@
 package metricusecase
 
-import "github.com/VadimOcLock/metrics-service/internal/service/metricservice"
+import (
+	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
+)
 
 type MetricUseCase struct {
 	metricService MetricService

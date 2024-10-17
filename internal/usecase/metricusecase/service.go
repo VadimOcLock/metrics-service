@@ -10,6 +10,7 @@ import (
 type MetricService interface {
 	UpdateGauge(ctx context.Context, dto metricservice.UpdateGaugeDTO) error
 	UpdateCounter(ctx context.Context, dto metricservice.UpdateCounterDTO) error
+	UpdateBatch(ctx context.Context, dto metricservice.UpdateBatchDTO) error
 	FindAll(ctx context.Context, dto metricservice.FindAllDTO) ([]entity.Metrics, error)
 	Find(ctx context.Context, dto metricservice.FindDTO) (entity.Metrics, error)
 }

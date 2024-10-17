@@ -36,6 +36,7 @@ func New(mh MetricHandler, pool *pgxpool.Pool) http.Handler {
 		r.Post("/", mh.UpdateMetricJSON)
 		r.Post("/{type}/{name}/{value}", mh.UpdateMetric)
 	})
+	r.Post("/updates/", mh.UpdateMetricBatch)
 	r.Route("/value", func(r chi.Router) {
 		r.Post("/", mh.GetMetricValueJSON)
 		r.Get("/{type}/{name}", mh.GetMetricValue)

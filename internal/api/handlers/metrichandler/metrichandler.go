@@ -250,3 +250,35 @@ func GetMetricsValidateErr(err error) bool {
 		errors.Is(err, errorz.ErrGaugeTypeNilValue) ||
 		errors.Is(err, errorz.ErrCounterTypeNilDelta)
 }
+
+func (h *MetricHandler) UpdateMetricBatch(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		log.Debug().Msg("http.StatusMethodNotAllowed")
+		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+
+		return
+	}
+	var metrics []entity.Metrics
+	if err := json.NewDecoder(req.Body).Decode(&metrics); err != nil {
+		log.Error().Err(err).Send()
+		http.Error(res, err.Error(), http.StatusBadRequest)
+
+		return
+	}
+	defer req.Body.Close()
+	if err := h.MetricsUseCase.UpdateBatch(req.Context(),
+		metricusecase.MetricsUpdateBatchDTO{Data: &metrics}); err != nil {
+		log.Error().Msgf("update metrics err: %s", err)
+		http.Error(res, err.Error(), http.StatusBadRequest)
+
+		return
+	}
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.WriteHeader(http.StatusOK)
+	if _, err := res.Write([]byte("success update metrics")); err != nil {
+		log.Error().Msgf("response body write err: %s", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+		return
+	}
+}

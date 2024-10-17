@@ -93,3 +93,7 @@ func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFin
 		Data:        &m,
 	}, nil
 }
+
+func (uc *MetricUseCase) UpdateBatch(ctx context.Context, dto MetricsUpdateBatchDTO) error {
+	return uc.metricService.UpdateBatch(ctx, metricservice.UpdateBatchDTO(dto))
+}

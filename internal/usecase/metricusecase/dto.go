@@ -25,3 +25,7 @@ type MetricFindResp struct {
 	MetricValue string
 	Data        *entity.Metrics `json:"-"`
 }
+
+type MetricsUpdateBatchDTO struct {
+	Data *[]entity.Metrics
+}

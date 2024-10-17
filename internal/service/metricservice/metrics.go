@@ -75,3 +75,7 @@ func (s *Service) Find(ctx context.Context, dto FindDTO) (entity.Metrics, error)
 
 	return m, nil
 }
+
+func (s *Service) UpdateBatch(ctx context.Context, dto UpdateBatchDTO) error {
+	return s.Store.UpdateMetricsBatchTx(ctx, UpdateMetricsBatchTxParams(dto))
+}

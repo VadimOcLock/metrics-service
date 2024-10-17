@@ -95,3 +95,23 @@ func (i *Impl) FindAllMetrics(_ context.Context, _ metricservice.FindAllMetricsN
 
 	return res, nil
 }
+
+func (i *Impl) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
+	i.s.mu.Lock()
+	defer i.s.mu.Unlock()
+	metrics := *arg.Data
+	for _, m := range metrics {
+		switch m.MType {
+		case enum.CounterMetricType:
+			if m.Delta != nil {
+				i.s.counters[m.ID] = *m.Delta
+			}
+		case enum.GaugeMetricType:
+			if m.Value != nil {
+				i.s.gauges[m.ID] = *m.Value
+			}
+		}
+	}
+
+	return nil
+}
