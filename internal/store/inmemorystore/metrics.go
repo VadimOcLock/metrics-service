@@ -54,7 +54,7 @@ func (i *Impl) FindGaugeMetrics(ctx context.Context, arg metricservice.FindGauge
 
 	return entity.Metrics{
 		ID:    arg.MetricName,
-		MType: enum.CounterMetricType,
+		MType: enum.GaugeMetricType,
 		Value: &vl,
 	}, nil
 }

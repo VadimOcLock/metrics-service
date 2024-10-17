@@ -170,10 +170,7 @@ func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 		MetricType: metricType,
 		MetricName: metricName,
 	})
-	if errors.Is(err, errorz.ErrUndefinedMetricType) ||
-		errors.Is(err, errorz.ErrUndefinedMetricName) ||
-		errors.Is(err, errorz.ErrGaugeTypeNilValue) ||
-		errors.Is(err, errorz.ErrCounterTypeNilDelta) {
+	if GetMetricsValidateErr(err) {
 		http.Error(res, err.Error(), http.StatusNotFound)
 
 		return
@@ -219,8 +216,7 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 		MetricType: dto.MType,
 		MetricName: dto.ID,
 	})
-	if errors.Is(err, errorz.ErrUndefinedMetricType) ||
-		errors.Is(err, errorz.ErrUndefinedMetricName) {
+	if GetMetricsValidateErr(err) {
 		http.Error(res, err.Error(), http.StatusNotFound)
 
 		return
@@ -246,4 +242,11 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 
 		return
 	}
+}
+
+func GetMetricsValidateErr(err error) bool {
+	return errors.Is(err, errorz.ErrUndefinedMetricType) ||
+		errors.Is(err, errorz.ErrUndefinedMetricName) ||
+		errors.Is(err, errorz.ErrGaugeTypeNilValue) ||
+		errors.Is(err, errorz.ErrCounterTypeNilDelta)
 }
