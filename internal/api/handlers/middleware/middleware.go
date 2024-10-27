@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/VadimOcLock/metrics-service/internal/hashutil"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -163,4 +165,63 @@ func GZipMiddleware(h http.Handler) http.Handler {
 
 		h.ServeHTTP(ow, r)
 	})
+}
+
+func RequestSignatureVerificationMiddleware(key string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if key == "" {
+				next.ServeHTTP(w, r)
+
+				return
+			}
+
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, "Failed to read request body", http.StatusBadRequest)
+
+				return
+			}
+
+			clientHash := r.Header.Get("HashSHA256")
+			serverHash := hashutil.ComputeHMAC(string(body), key)
+			if clientHash != serverHash {
+				http.Error(w, "Invalid hash", http.StatusBadRequest)
+
+				return
+			}
+			r.Body = io.NopCloser(bytes.NewBuffer(body))
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func ResponseSigningMiddleware(key string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			signedWriter := &SignedResponseWriter{ResponseWriter: w, key: key}
+			next.ServeHTTP(signedWriter, r)
+		})
+	}
+}
+
+type SignedResponseWriter struct {
+	http.ResponseWriter
+	key    string
+	buffer bytes.Buffer
+}
+
+func (w *SignedResponseWriter) Write(data []byte) (int, error) {
+	w.buffer.Write(data)
+
+	return w.ResponseWriter.Write(data)
+}
+
+func (w *SignedResponseWriter) WriteHeader(statusCode int) {
+	if w.key != "" {
+		responseHash := hashutil.ComputeHMAC(w.buffer.String(), w.key)
+		w.Header().Set("HashSHA256", responseHash)
+	}
+	w.ResponseWriter.WriteHeader(statusCode)
 }

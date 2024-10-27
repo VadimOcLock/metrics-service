@@ -36,9 +36,10 @@ func main() {
 
 	// Worker.
 	w := worker.NewMetricsWorker(worker.MetricsWorkerOpts{
-		ServerAddr:     HTTPProtocolName + "://" + cfg.EndpointAddr,
-		PoolInterval:   time.Duration(cfg.AgentConfig.PoolInterval) * time.Second,
-		ReportInterval: time.Duration(cfg.AgentConfig.ReportInterval) * time.Second,
+		ServerAddr:         HTTPProtocolName + "://" + cfg.EndpointAddr,
+		PoolInterval:       time.Duration(cfg.AgentConfig.PoolInterval) * time.Second,
+		ReportInterval:     time.Duration(cfg.AgentConfig.ReportInterval) * time.Second,
+		SecretSignatureKey: cfg.AppConfig.SecretSignatureKey,
 	})
 
 	// Run app.

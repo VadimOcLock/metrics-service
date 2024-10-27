@@ -32,13 +32,12 @@ import (
 
 const (
 	migrationsPath = "file://internal/store/migrations"
-	inMemoryMode   = true
 )
 
 func main() {
 	ctx := context.Background()
 
-	// Config.
+	// HandlerConfig.
 	cfg, err := config.Load[config.WebServer]()
 	if err != nil {
 		log.Fatal().Msgf("cfg load err: %v", err)
@@ -60,7 +59,11 @@ func main() {
 	if err != nil && !cfg.DatabaseConfig.InMemoryMode() {
 		log.Fatal().Msgf("database connect err: %v", err)
 	}
-	defer dbPool.Close()
+	defer func() {
+		if dbPool != nil {
+			dbPool.Close()
+		}
+	}()
 
 	// Store.
 	var store metricservice.Store
@@ -82,7 +85,9 @@ func main() {
 
 	// Handler.
 	mh := metrichandler.NewMetricHandler(&metricUseCase)
-	mux := metrichandler.New(mh, dbPool)
+	mux := metrichandler.New(mh,
+		metrichandler.WithDbPool(dbPool),
+		metrichandler.WithSecretSignatureKey(cfg.SecretSignatureKey))
 	server := &http.Server{
 		Addr:              cfg.WebServerConfig.SrvAddr,
 		Handler:           mux,

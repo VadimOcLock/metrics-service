@@ -21,9 +21,10 @@ type MetricsWorker struct {
 var _ lifecycle.WorkerRunner = (*MetricsWorker)(nil)
 
 type MetricsWorkerOpts struct {
-	ServerAddr     string
-	PoolInterval   time.Duration
-	ReportInterval time.Duration
+	ServerAddr         string
+	PoolInterval       time.Duration
+	ReportInterval     time.Duration
+	SecretSignatureKey string
 }
 
 func NewMetricsWorker(opts MetricsWorkerOpts) *MetricsWorker {

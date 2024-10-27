@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"runtime"
 
+	"github.com/VadimOcLock/metrics-service/internal/hashutil"
+
 	"github.com/VadimOcLock/metrics-service/internal/compress"
 
 	"github.com/go-resty/resty/v2"
@@ -110,9 +112,10 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) 
 			Value: fmt.Sprintf("%v", value),
 		}
 		if err := SendMetric(ctx, SendMetricOpts{
-			Client:        client,
-			ServerAddress: w.Opts.ServerAddr,
-			Metric:        metric,
+			Client:             client,
+			ServerAddress:      w.Opts.ServerAddr,
+			Metric:             metric,
+			SecretSignatureKey: w.Opts.SecretSignatureKey,
 		}); err != nil {
 			return fmt.Errorf("worker.sendMetrics: %w", err)
 		}
@@ -124,9 +127,10 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) 
 			Value: fmt.Sprintf("%v", value),
 		}
 		if err := SendMetric(ctx, SendMetricOpts{
-			Client:        client,
-			ServerAddress: w.Opts.ServerAddr,
-			Metric:        metric,
+			Client:             client,
+			ServerAddress:      w.Opts.ServerAddr,
+			Metric:             metric,
+			SecretSignatureKey: w.Opts.SecretSignatureKey,
 		}); err != nil {
 			return fmt.Errorf("worker.sendMetrics: %w", err)
 		}
@@ -136,12 +140,13 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) 
 }
 
 type SendMetricOpts struct {
-	Client        *resty.Client
-	ServerAddress string
-	Metric        entity.MetricDTO
+	Client             *resty.Client
+	ServerAddress      string
+	Metric             entity.MetricDTO
+	SecretSignatureKey string
 }
 
-func SendMetric(_ context.Context, opts SendMetricOpts) error {
+func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 	metric, err := entity.BuildMetrics(opts.Metric)
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
@@ -152,17 +157,25 @@ func SendMetric(_ context.Context, opts SendMetricOpts) error {
 	if err = json.NewEncoder(&buf).Encode(metric); err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
+
 	body, err := compress.GZipCompress(buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
 
-	resp, err := opts.Client.R().
+	req := opts.Client.R().
+		SetContext(ctx).
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Content-Encoding", "gzip").
 		SetHeader("Accept-Encoding", "gzip").
-		SetBody(body).
-		Post(url)
+		SetBody(body)
+
+	if opts.SecretSignatureKey != "" {
+		hash := hashutil.ComputeHMAC(string(body), opts.SecretSignatureKey)
+		req.SetHeader("HashSHA256", hash)
+	}
+
+	resp, err := req.Post(url)
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}

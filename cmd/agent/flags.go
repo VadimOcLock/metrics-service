@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	defaultSrvAddr        = "localhost:8080"
-	defaultPoolInterval   = 2
-	defaultReportInterval = 10
-	HTTPProtocolName      = "http"
+	defaultSrvAddr            = "localhost:8080"
+	defaultPoolInterval       = 2
+	defaultReportInterval     = 10
+	HTTPProtocolName          = "http"
+	defaultSecretSignatureKey = ""
 )
 
 type netAddress struct {
@@ -45,14 +46,16 @@ func (n *netAddress) Set(value string) error {
 
 func parseFlags(cfg *config.Agent) error {
 	var (
-		flagEndpointAddr   string
-		flagReportInterval int
-		flagPoolInterval   int
+		flagEndpointAddr       string
+		flagReportInterval     int
+		flagPoolInterval       int
+		flagSecretSignatureKey string
 	)
 
 	flag.IntVar(&flagReportInterval, "r", defaultReportInterval, "report frequency in seconds")
 	flag.IntVar(&flagPoolInterval, "p", defaultPoolInterval, "poll data frequency in seconds")
 	flag.StringVar(&flagEndpointAddr, "a", defaultSrvAddr, "server endpoint host and port")
+	flag.StringVar(&flagSecretSignatureKey, "k", defaultSecretSignatureKey, "secret signature key")
 
 	flag.Parse()
 
@@ -69,6 +72,9 @@ func parseFlags(cfg *config.Agent) error {
 	}
 	if envVal := os.Getenv("POLL_INTERVAL"); envVal == "" {
 		cfg.AgentConfig.PoolInterval = flagPoolInterval
+	}
+	if envVal := os.Getenv("KEY"); envVal == "" {
+		cfg.AppConfig.SecretSignatureKey = flagSecretSignatureKey
 	}
 
 	return nil

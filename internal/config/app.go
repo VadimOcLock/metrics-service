@@ -2,6 +2,7 @@ package config
 
 type AppConfig struct {
 	// Health, Log, Prometheus, etc.
+	SecretSignatureKey string `env:"KEY"`
 }
 
 type AgentConfig struct {

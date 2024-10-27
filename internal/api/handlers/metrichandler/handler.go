@@ -12,20 +12,66 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func New(mh MetricHandler, pool *pgxpool.Pool) http.Handler {
+type HandlerConfig struct {
+	DbPool             *pgxpool.Pool
+	SecretSignatureKey string
+}
+
+type Option interface {
+	apply(*HandlerConfig)
+}
+
+type optionFunc func(*HandlerConfig)
+
+func (o optionFunc) apply(c *HandlerConfig) {
+	o(c)
+}
+
+// WithSecretSignatureKey возвращает опцию для установки секретного ключа подписи в конфигурации HandlerConfig.
+// Используйте эту функцию, чтобы задать секретный ключ при создании обработчика.
+//
+// Пример:
+//
+//	handler := New(myMetricHandler, WithSecretSignatureKey("my_secret_key"))
+func WithSecretSignatureKey(key string) Option {
+	return optionFunc(func(cfg *HandlerConfig) {
+		cfg.SecretSignatureKey = key
+	})
+}
+
+// WithDbPool возвращает опцию для установки пула подключений к базе данных в конфигурации HandlerConfig.
+// Используйте эту функцию, чтобы передать пул подключений при создании обработчика.
+//
+// Пример:
+//
+//	handler := New(myMetricHandler, WithDbPool(myDbPool))
+func WithDbPool(dbPool *pgxpool.Pool) Option {
+	return optionFunc(func(cfg *HandlerConfig) {
+		cfg.DbPool = dbPool
+	})
+}
+
+func New(mh MetricHandler, opts ...Option) http.Handler {
+	cfg := &HandlerConfig{}
+	for _, opt := range opts {
+		opt.apply(cfg)
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(middleware.GZipMiddleware)
+	r.Use(middleware.RequestSignatureVerificationMiddleware(cfg.SecretSignatureKey))
+	r.Use(middleware.ResponseSigningMiddleware(cfg.SecretSignatureKey))
 
 	r.Get("/", mh.GetAllMetrics)
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		if pool == nil {
+		if cfg.DbPool == nil {
 			http.Error(w, "database unavailable now", http.StatusInternalServerError)
 
 			return
 		}
-		if err := pool.Ping(r.Context()); err != nil {
+		if err := cfg.DbPool.Ping(r.Context()); err != nil {
 			http.Error(w, "database unavailable now", http.StatusInternalServerError)
 
 			return
