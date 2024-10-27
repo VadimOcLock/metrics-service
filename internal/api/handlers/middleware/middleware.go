@@ -184,7 +184,7 @@ func RequestSignatureVerificationMiddleware(key string) func(http.Handler) http.
 			}
 
 			clientHash := r.Header.Get("HashSHA256")
-			serverHash := hashutil.ComputeHMAC(string(body), key)
+			serverHash := hashutil.ComputeHMAC(body, key)
 			if clientHash != serverHash {
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 
@@ -220,7 +220,7 @@ func (w *SignedResponseWriter) Write(data []byte) (int, error) {
 
 func (w *SignedResponseWriter) WriteHeader(statusCode int) {
 	if w.key != "" {
-		responseHash := hashutil.ComputeHMAC(w.buffer.String(), w.key)
+		responseHash := hashutil.ComputeHMAC(w.buffer.Bytes(), w.key)
 		w.Header().Set("HashSHA256", responseHash)
 	}
 	w.ResponseWriter.WriteHeader(statusCode)

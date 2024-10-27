@@ -7,9 +7,9 @@ import (
 )
 
 // ComputeHMAC вычисляет HMAC SHA256 для переданного сообщения и ключа
-func ComputeHMAC(message, key string) string {
+func ComputeHMAC(message []byte, key string) string {
 	h := hmac.New(sha256.New, []byte(key))
-	h.Write([]byte(message))
+	h.Write(message)
 
 	return hex.EncodeToString(h.Sum(nil))
 }

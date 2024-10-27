@@ -167,15 +167,16 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 		SetContext(ctx).
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Content-Encoding", "gzip").
-		SetHeader("Accept-Encoding", "gzip").
-		SetBody(body)
+		SetHeader("Accept-Encoding", "gzip")
 
 	if opts.SecretSignatureKey != "" {
-		hash := hashutil.ComputeHMAC(string(body), opts.SecretSignatureKey)
+		hash := hashutil.ComputeHMAC(buf.Bytes(), opts.SecretSignatureKey)
 		req.SetHeader("HashSHA256", hash)
 	}
 
-	resp, err := req.Post(url)
+	resp, err := req.
+		SetBody(body).
+		Post(url)
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
