@@ -50,9 +50,7 @@ func Run(startDelay time.Duration, fn func() error) error {
 
 		delay *= multiplier
 
-		select {
-		case <-time.After(delay):
-		}
+		<-time.After(delay)
 	}
 
 	return fmt.Errorf("after %d attempts, last error: %w", maxRetryAttempts, err)
