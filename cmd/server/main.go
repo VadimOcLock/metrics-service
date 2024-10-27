@@ -86,7 +86,7 @@ func main() {
 	// Handler.
 	mh := metrichandler.NewMetricHandler(&metricUseCase)
 	mux := metrichandler.New(mh,
-		metrichandler.WithDbPool(dbPool),
+		metrichandler.WithDBPool(dbPool),
 		metrichandler.WithSecretSignatureKey(cfg.SecretSignatureKey))
 	server := &http.Server{
 		Addr:              cfg.WebServerConfig.SrvAddr,

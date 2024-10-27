@@ -13,7 +13,7 @@ import (
 )
 
 type HandlerConfig struct {
-	DbPool             *pgxpool.Pool
+	DBPool             *pgxpool.Pool
 	SecretSignatureKey string
 }
 
@@ -39,15 +39,15 @@ func WithSecretSignatureKey(key string) Option {
 	})
 }
 
-// WithDbPool возвращает опцию для установки пула подключений к базе данных в конфигурации HandlerConfig.
+// WithDBPool возвращает опцию для установки пула подключений к базе данных в конфигурации HandlerConfig.
 // Используйте эту функцию, чтобы передать пул подключений при создании обработчика.
 //
 // Пример:
 //
-//	handler := New(myMetricHandler, WithDbPool(myDbPool))
-func WithDbPool(dbPool *pgxpool.Pool) Option {
+//	handler := New(myMetricHandler, WithDBPool(myDbPool))
+func WithDBPool(dbPool *pgxpool.Pool) Option {
 	return optionFunc(func(cfg *HandlerConfig) {
-		cfg.DbPool = dbPool
+		cfg.DBPool = dbPool
 	})
 }
 
@@ -66,12 +66,12 @@ func New(mh MetricHandler, opts ...Option) http.Handler {
 
 	r.Get("/", mh.GetAllMetrics)
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		if cfg.DbPool == nil {
+		if cfg.DBPool == nil {
 			http.Error(w, "database unavailable now", http.StatusInternalServerError)
 
 			return
 		}
-		if err := cfg.DbPool.Ping(r.Context()); err != nil {
+		if err := cfg.DBPool.Ping(r.Context()); err != nil {
 			http.Error(w, "database unavailable now", http.StatusInternalServerError)
 
 			return
