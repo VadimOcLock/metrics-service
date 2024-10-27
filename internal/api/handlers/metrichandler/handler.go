@@ -60,9 +60,9 @@ func New(mh MetricHandler, opts ...Option) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(chimiddleware.Recoverer)
-	r.Use(middleware.GZipMiddleware)
 	r.Use(middleware.RequestSignatureVerificationMiddleware(cfg.SecretSignatureKey))
 	r.Use(middleware.ResponseSigningMiddleware(cfg.SecretSignatureKey))
+	r.Use(middleware.GZipMiddleware)
 
 	r.Get("/", mh.GetAllMetrics)
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {

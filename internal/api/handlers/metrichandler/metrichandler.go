@@ -3,6 +3,7 @@ package metrichandler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -82,7 +83,8 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 
 	var dto entity.Metrics
 	if err := json.NewDecoder(req.Body).Decode(&dto); err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
+		//http.Error(res, err.Error(), http.StatusBadRequest)
+		http.Error(res, fmt.Errorf("decode err: %w", err).Error(), http.StatusBadRequest)
 
 		return
 	}
