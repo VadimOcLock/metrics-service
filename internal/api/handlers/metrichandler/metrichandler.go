@@ -84,7 +84,7 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 
 	var dto entity.Metrics
 	if err := json.NewDecoder(req.Body).Decode(&dto); err != nil {
-		//http.Error(res, err.Error(), http.StatusBadRequest)
+		log.Error().Msgf("decode err: %s", err)
 		http.Error(res, fmt.Errorf("decode err: %w", err).Error(), http.StatusBadRequest)
 
 		return
@@ -95,12 +95,14 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 		}
 	}(req.Body)
 	if err := dto.Valid(); err != nil {
+		log.Error().Msgf("valid err: %s", err)
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
 		return
 	}
 	mv, err := dto.MetricValue()
 	if err != nil {
+		log.Error().Msgf("dto err: %s", err)
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
 		return
@@ -112,6 +114,7 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 		Value: mv,
 	})
 	if err != nil {
+		log.Error().Msgf("update err: %s", err)
 		http.Error(res, err.Error(), http.StatusBadRequest)
 
 		return

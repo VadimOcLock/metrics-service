@@ -177,6 +177,7 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 		log.Debug().Msgf("secret key: %s", opts.SecretSignatureKey)
 		log.Debug().Msgf("req body: %s", buf.Bytes())
 		hash := hashutil.ComputeHMAC(buf.Bytes(), opts.SecretSignatureKey)
+		log.Debug().Msgf("client hash: %s", hash)
 		req.SetHeader("HashSHA256", hash)
 	}
 
