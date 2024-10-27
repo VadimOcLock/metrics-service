@@ -175,6 +175,12 @@ func RequestSignatureVerificationMiddleware(key string) func(http.Handler) http.
 
 				return
 			}
+			clientHash := r.Header.Get("HashSHA256")
+			if clientHash == "" {
+				next.ServeHTTP(w, r)
+
+				return
+			}
 
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
@@ -183,12 +189,6 @@ func RequestSignatureVerificationMiddleware(key string) func(http.Handler) http.
 				return
 			}
 
-			clientHash := r.Header.Get("HashSHA256")
-			if clientHash == "" {
-				next.ServeHTTP(w, r)
-
-				return
-			}
 			log.Debug().Msgf("client hash: %s", clientHash)
 			serverHash := hashutil.ComputeHMAC(body, key)
 			log.Debug().Msgf("server hash: %s", serverHash)
