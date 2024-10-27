@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"math/big"
 	"net/http"
 	"runtime"
@@ -21,6 +22,8 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 )
+
+const updateAPIEndpoint = "/update"
 
 func (w *MetricsWorker) collectMetrics(_ context.Context, m *entity.MetricsData) error {
 	var memStats runtime.MemStats
@@ -151,7 +154,7 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 	if err != nil {
 		return fmt.Errorf("worker.SendMetric: %w", err)
 	}
-	url := opts.ServerAddress + "/update"
+	url := opts.ServerAddress + updateAPIEndpoint
 
 	var buf bytes.Buffer
 	if err = json.NewEncoder(&buf).Encode(metric); err != nil {
@@ -183,6 +186,8 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 	}
 
 	if resp.StatusCode() != http.StatusOK {
+		log.Error().Msg(string(resp.Body()))
+
 		return errorz.ErrSendMetricStatusNotOK
 	}
 
