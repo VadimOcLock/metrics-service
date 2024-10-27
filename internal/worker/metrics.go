@@ -6,10 +6,11 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"math/big"
 	"net/http"
 	"runtime"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/VadimOcLock/metrics-service/internal/hashutil"
 
@@ -173,11 +174,7 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 		SetHeader("Accept-Encoding", "gzip")
 
 	if opts.SecretSignatureKey != "" {
-		//hash := hashutil.ComputeHMAC(body, opts.SecretSignatureKey)
-		log.Debug().Msgf("secret key: %s", opts.SecretSignatureKey)
-		log.Debug().Msgf("req body: %s", buf.Bytes())
 		hash := hashutil.ComputeHMAC(buf.Bytes(), opts.SecretSignatureKey)
-		log.Debug().Msgf("client hash: %s", hash)
 		req.SetHeader("HashSHA256", hash)
 	}
 

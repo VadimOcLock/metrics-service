@@ -69,9 +69,6 @@ func (w *MetricsWorker) Run(ctx context.Context) error {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				//err := retry.RunCtx(ctx, time.Second, func(ctx context.Context) error {
-				//	return w.sendMetrics(ctx, &metrics)
-				//})
 				err := retry.Run(time.Second, func() error {
 					return w.sendMetrics(ctx, &metrics)
 				})
