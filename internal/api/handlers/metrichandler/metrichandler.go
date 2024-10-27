@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"io"
 	"net/http"
 
@@ -283,5 +284,27 @@ func (h *MetricHandler) UpdateMetricBatch(res http.ResponseWriter, req *http.Req
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
+	}
+}
+
+func (h *MetricHandler) Ping(pool *pgxpool.Pool) func(res http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			log.Debug().Msg("http.StatusMethodNotAllowed")
+			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+
+			return
+		}
+		if pool == nil {
+			http.Error(w, "database unavailable now", http.StatusInternalServerError)
+
+			return
+		}
+		if err := pool.Ping(r.Context()); err != nil {
+			http.Error(w, "database unavailable now", http.StatusInternalServerError)
+
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }

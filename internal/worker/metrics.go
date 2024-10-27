@@ -170,8 +170,8 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 		SetHeader("Accept-Encoding", "gzip")
 
 	if opts.SecretSignatureKey != "" {
-		hash := hashutil.ComputeHMAC(body, opts.SecretSignatureKey)
-		//hash := hashutil.ComputeHMAC(buf.Bytes(), opts.SecretSignatureKey)
+		//hash := hashutil.ComputeHMAC(body, opts.SecretSignatureKey)
+		hash := hashutil.ComputeHMAC(buf.Bytes(), opts.SecretSignatureKey)
 		req.SetHeader("HashSHA256", hash)
 	}
 

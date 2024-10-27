@@ -62,7 +62,6 @@ func Logger(next http.Handler) http.Handler {
 			Int("status", wrappedWriter.statusCode).
 			Int("content length", wrappedWriter.contentLength).
 			Msg("request completed")
-
 	})
 }
 
@@ -190,6 +189,7 @@ func RequestSignatureVerificationMiddleware(key string) func(http.Handler) http.
 
 				return
 			}
+
 			r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 			next.ServeHTTP(w, r)
