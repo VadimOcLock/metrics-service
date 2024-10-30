@@ -18,6 +18,13 @@ const (
 	defaultReportInterval     = 10
 	HTTPProtocolName          = "http"
 	defaultSecretSignatureKey = ""
+	defaultRateLimit          = 1
+
+	addressEnvName        = "ADDRESS"
+	reportIntervalEnvName = "REPORT_INTERVAL"
+	pollIntervalEnvName   = "POLL_INTERVAL"
+	secretKeyEnvName      = "KEY"
+	rateLimitEnvName      = "RATE_LIMIT"
 )
 
 type netAddress struct {
@@ -50,12 +57,14 @@ func parseFlags(cfg *config.Agent) error {
 		flagReportInterval     int
 		flagPoolInterval       int
 		flagSecretSignatureKey string
+		flagRateLimit          int
 	)
 
 	flag.IntVar(&flagReportInterval, "r", defaultReportInterval, "report frequency in seconds")
 	flag.IntVar(&flagPoolInterval, "p", defaultPoolInterval, "poll data frequency in seconds")
 	flag.StringVar(&flagEndpointAddr, "a", defaultSrvAddr, "server endpoint host and port")
 	flag.StringVar(&flagSecretSignatureKey, "k", defaultSecretSignatureKey, "secret signature key")
+	flag.IntVar(&flagRateLimit, "l", defaultRateLimit, "send metrics rate limit")
 
 	flag.Parse()
 
@@ -64,17 +73,20 @@ func parseFlags(cfg *config.Agent) error {
 		return fmt.Errorf("error parsing endpoint address: %w", err)
 	}
 
-	if envVal := os.Getenv("ADDRESS"); envVal == "" {
+	if envVal := os.Getenv(addressEnvName); envVal == "" {
 		cfg.AgentConfig.EndpointAddr = endpointAddr.String()
 	}
-	if envVal := os.Getenv("REPORT_INTERVAL"); envVal == "" {
+	if envVal := os.Getenv(reportIntervalEnvName); envVal == "" {
 		cfg.AgentConfig.ReportInterval = flagReportInterval
 	}
-	if envVal := os.Getenv("POLL_INTERVAL"); envVal == "" {
+	if envVal := os.Getenv(pollIntervalEnvName); envVal == "" {
 		cfg.AgentConfig.PoolInterval = flagPoolInterval
 	}
-	if envVal := os.Getenv("KEY"); envVal == "" {
+	if envVal := os.Getenv(secretKeyEnvName); envVal == "" {
 		cfg.AppConfig.SecretSignatureKey = flagSecretSignatureKey
+	}
+	if envVal := os.Getenv(rateLimitEnvName); envVal == "" {
+		cfg.AgentConfig.RateLimit = flagRateLimit
 	}
 
 	return nil

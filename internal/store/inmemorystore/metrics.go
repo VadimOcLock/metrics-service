@@ -104,7 +104,7 @@ func (i *Impl) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.Updat
 		switch m.MType {
 		case enum.CounterMetricType:
 			if m.Delta != nil {
-				i.s.counters[m.ID] = *m.Delta
+				i.s.counters[m.ID] += *m.Delta
 			}
 		case enum.GaugeMetricType:
 			if m.Value != nil {

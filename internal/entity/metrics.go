@@ -44,6 +44,10 @@ type MetricsData struct {
 	TotalAlloc    Gauge
 	PollCount     Counter
 	RandomValue   Gauge
+
+	TotalMemory     Gauge
+	FreeMemory      Gauge
+	CPUUtilization1 Gauge
 }
 
 type MetricDTO struct {

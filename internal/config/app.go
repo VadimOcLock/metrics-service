@@ -9,6 +9,7 @@ type AgentConfig struct {
 	EndpointAddr   string `env:"ADDRESS"`
 	PoolInterval   int    `env:"POLL_INTERVAL"`
 	ReportInterval int    `env:"REPORT_INTERVAL"`
+	RateLimit      int    `env:"RATE_LIMIT"`
 }
 
 type WebServerConfig struct {

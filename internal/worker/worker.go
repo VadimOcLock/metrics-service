@@ -2,11 +2,9 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"time"
-
-	"github.com/VadimOcLock/metrics-service/pkg/retry"
 
 	"github.com/rs/zerolog/log"
 
@@ -15,7 +13,8 @@ import (
 )
 
 type MetricsWorker struct {
-	Opts MetricsWorkerOpts
+	Opts      MetricsWorkerOpts
+	MetricsCh chan entity.MetricsData
 }
 
 var _ lifecycle.WorkerRunner = (*MetricsWorker)(nil)
@@ -25,59 +24,55 @@ type MetricsWorkerOpts struct {
 	PoolInterval       time.Duration
 	ReportInterval     time.Duration
 	SecretSignatureKey string
+	RateLimit          int
 }
 
 func NewMetricsWorker(opts MetricsWorkerOpts) *MetricsWorker {
 	return &MetricsWorker{
-		Opts: opts,
+		Opts:      opts,
+		MetricsCh: make(chan entity.MetricsData, opts.RateLimit),
 	}
 }
 
 func (w *MetricsWorker) Run(ctx context.Context) error {
-	var metrics entity.MetricsData
 	var wg sync.WaitGroup
-	chanErr := make(chan error, 1)
-	pollTimer := time.NewTimer(w.Opts.PoolInterval)
-	reportTimer := time.NewTimer(w.Opts.ReportInterval)
-	defer func() {
-		pollTimer.Stop()
-		reportTimer.Stop()
+	errCh := make(chan error, 1)
+
+	// Collect system metrics.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		w.collectSystemMetricsLoop(ctx, errCh)
 	}()
 
-	for {
-		select {
-		case <-ctx.Done():
-			wg.Wait()
+	//Collect runtime metrics.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		w.collectRuntimeMetricsLoop(ctx, errCh)
+	}()
 
-			return ctx.Err()
-		case err := <-chanErr:
-			if err != nil {
+	// Send metrics.
+	for i := 0; i < w.Opts.RateLimit; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			w.sendMetricsLoop(ctx, errCh)
+		}()
+	}
+
+	// Error handling.
+	go func() {
+		for err := range errCh {
+			if err != nil && !errors.Is(err, context.Canceled) {
 				log.Error().Msg(err.Error())
 			}
-		case <-pollTimer.C:
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := w.collectMetrics(ctx, &metrics)
-				if err != nil {
-					chanErr <- fmt.Errorf("worker.run: %w", err)
-				}
-				log.Debug().Msg("collect metric success")
-				defer pollTimer.Reset(w.Opts.PoolInterval)
-			}()
-		case <-reportTimer.C:
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := retry.Run(time.Second, func() error {
-					return w.sendMetrics(ctx, &metrics)
-				})
-				if err != nil {
-					chanErr <- fmt.Errorf("worker.run: %w", err)
-				}
-				log.Debug().Msg("send metric success")
-				defer reportTimer.Reset(w.Opts.ReportInterval)
-			}()
 		}
-	}
+	}()
+
+	wg.Wait()
+	close(errCh)
+	log.Debug().Msg("worker goroutine finished")
+
+	return nil
 }

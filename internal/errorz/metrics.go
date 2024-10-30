@@ -16,6 +16,7 @@ var (
 	ErrIncorrectDatabaseSchema = errors.New("incorrect database schema")
 	ErrNoSpecifiedDatabaseName = errors.New("no database name specified")
 	ErrMetricNotFound          = errors.New("metric not found")
+	ErrTrySendEmptyData        = errors.New("try to send empty data")
 )
 
 const (

@@ -40,6 +40,7 @@ func main() {
 		PoolInterval:       time.Duration(cfg.AgentConfig.PoolInterval) * time.Second,
 		ReportInterval:     time.Duration(cfg.AgentConfig.ReportInterval) * time.Second,
 		SecretSignatureKey: cfg.AppConfig.SecretSignatureKey,
+		RateLimit:          cfg.AgentConfig.RateLimit,
 	})
 
 	// Run app.

@@ -9,6 +9,10 @@ import (
 	"math/big"
 	"net/http"
 	"runtime"
+	"time"
+
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 
 	"github.com/rs/zerolog/log"
 
@@ -24,11 +28,13 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 )
 
-const updateAPIEndpoint = "/update"
+const updateAPIEndpoint = "/updates/"
 
-func (w *MetricsWorker) collectMetrics(_ context.Context, m *entity.MetricsData) error {
+func (w *MetricsWorker) collectRuntimeMetrics(_ context.Context) (entity.MetricsData, error) {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
+
+	var m entity.MetricsData
 
 	m.Alloc = entity.Gauge(memStats.Alloc)
 	m.BuckHashSys = entity.Gauge(memStats.BuckHashSys)
@@ -63,18 +69,124 @@ func (w *MetricsWorker) collectMetrics(_ context.Context, m *entity.MetricsData)
 	maxInt := big.NewInt(1000000)
 	randomInt, err := rand.Int(rand.Reader, maxInt)
 	if err != nil {
-		return fmt.Errorf("worker.collectMetrics: %w", err)
+		return entity.MetricsData{}, fmt.Errorf("worker.collectRuntimeMetrics: %w", err)
 	}
 	bigFloat := new(big.Float).Quo(new(big.Float).SetInt(randomInt), big.NewFloat(10000))
 	randVal, _ := bigFloat.Float64()
 	m.RandomValue = entity.Gauge(randVal)
 
-	return nil
+	return m, nil
 }
 
-func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) error {
-	client := resty.New()
+func (w *MetricsWorker) collectRuntimeMetricsLoop(ctx context.Context, errCh chan error) {
+	ticker := time.NewTicker(w.Opts.PoolInterval)
+	defer ticker.Stop()
+	for t := range ticker.C {
+		log.Debug().Msgf("runtime metrics collector start at: %s", t.String())
+		data, err := w.collectRuntimeMetrics(ctx)
+		if err != nil {
+			errCh <- fmt.Errorf("collect runtime metrics err: %w", err)
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			log.Debug().Msg("runtime metrics collector finished")
+			return
+		case w.MetricsCh <- data:
+		default:
+		}
+	}
+}
 
+func (w *MetricsWorker) collectSystemMetrics(_ context.Context) (entity.MetricsData, error) {
+	var metrics entity.MetricsData
+
+	v, err := mem.VirtualMemory()
+	if err != nil {
+		return metrics, err
+	}
+	metrics.TotalMemory = entity.Gauge(v.Total)
+	metrics.FreeMemory = entity.Gauge(v.Free)
+
+	cpuUtilization, err := cpu.Percent(0, false)
+	if err != nil {
+		return metrics, err
+	}
+	if len(cpuUtilization) > 0 {
+		metrics.CPUUtilization1 = entity.Gauge(cpuUtilization[0])
+	}
+
+	return metrics, nil
+}
+
+func (w *MetricsWorker) collectSystemMetricsLoop(ctx context.Context, errCh chan error) {
+	ticker := time.NewTicker(w.Opts.PoolInterval)
+	defer ticker.Stop()
+	for t := range ticker.C {
+		log.Debug().Msgf("system metrics collector start at: %s", t.String())
+		data, err := w.collectSystemMetrics(ctx)
+		if err != nil {
+			errCh <- fmt.Errorf("collect system metrics err: %w", err)
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			log.Debug().Msg("system metrics collector finished")
+			return
+		case w.MetricsCh <- data:
+		default:
+		}
+	}
+}
+
+func (w *MetricsWorker) sendMetrics(ctx context.Context, m entity.MetricsData) error {
+	gauges, counters := buildMetricsMap(m)
+	metricsBatch, err := buildMetricsBatch(gauges, counters)
+	if err != nil {
+		return err
+	}
+	return sendMetricRequest(ctx, sendMetricRequestOpts{
+		ServerAddress:      w.Opts.ServerAddr,
+		SecretSignatureKey: w.Opts.SecretSignatureKey,
+		batch:              metricsBatch,
+	})
+}
+
+func buildMetricsBatch(gs map[string]entity.Gauge, cs map[string]entity.Counter) ([]entity.Metrics, error) {
+	outLen := len(gs) + len(cs)
+	if outLen == 0 {
+		return nil, errorz.ErrTrySendEmptyData
+	}
+	res := make([]entity.Metrics, outLen)
+	for name, val := range gs {
+		vl := float64(val)
+		if val == 0 {
+			continue
+		}
+		m := entity.Metrics{
+			ID:    name,
+			MType: enum.GaugeMetricType,
+			Value: &vl,
+		}
+		res = append(res, m)
+	}
+	for name, val := range cs {
+		vl := int64(val)
+		if val == 0 {
+			continue
+		}
+		m := entity.Metrics{
+			ID:    name,
+			MType: enum.CounterMetricType,
+			Delta: &vl,
+		}
+		res = append(res, m)
+	}
+
+	return res, nil
+}
+
+func buildMetricsMap(m entity.MetricsData) (map[string]entity.Gauge, map[string]entity.Counter) {
 	gaugeMetrics := map[string]entity.Gauge{
 		enum.AllocMetricName:         m.Alloc,
 		enum.BuckHashSysMetricName:   m.BuckHashSys,
@@ -104,70 +216,39 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m *entity.MetricsData) 
 		enum.SysMetricName:           m.Sys,
 		enum.TotalAllocMetricName:    m.TotalAlloc,
 		enum.RandomValueMetricName:   m.RandomValue,
+
+		enum.TotalMemoryName:     m.TotalMemory,
+		enum.FreeMemoryName:      m.FreeMemory,
+		enum.CPUUtilization1Name: m.CPUUtilization1,
 	}
 	counterMetrics := map[string]entity.Counter{
 		enum.PollCountMetricName: m.PollCount,
 	}
 
-	for name, value := range gaugeMetrics {
-		metric := entity.MetricDTO{
-			Type:  enum.GaugeMetricType,
-			Name:  name,
-			Value: fmt.Sprintf("%v", value),
-		}
-		if err := SendMetric(ctx, SendMetricOpts{
-			Client:             client,
-			ServerAddress:      w.Opts.ServerAddr,
-			Metric:             metric,
-			SecretSignatureKey: w.Opts.SecretSignatureKey,
-		}); err != nil {
-			return fmt.Errorf("worker.sendMetrics: %w", err)
-		}
-	}
-	for name, value := range counterMetrics {
-		metric := entity.MetricDTO{
-			Type:  enum.CounterMetricType,
-			Name:  name,
-			Value: fmt.Sprintf("%v", value),
-		}
-		if err := SendMetric(ctx, SendMetricOpts{
-			Client:             client,
-			ServerAddress:      w.Opts.ServerAddr,
-			Metric:             metric,
-			SecretSignatureKey: w.Opts.SecretSignatureKey,
-		}); err != nil {
-			return fmt.Errorf("worker.sendMetrics: %w", err)
-		}
-	}
-
-	return nil
+	return gaugeMetrics, counterMetrics
 }
 
-type SendMetricOpts struct {
-	Client             *resty.Client
+type sendMetricRequestOpts struct {
 	ServerAddress      string
-	Metric             entity.MetricDTO
 	SecretSignatureKey string
+	batch              []entity.Metrics
 }
 
-func SendMetric(ctx context.Context, opts SendMetricOpts) error {
-	metric, err := entity.BuildMetrics(opts.Metric)
-	if err != nil {
-		return fmt.Errorf("worker.SendMetric: %w", err)
-	}
+func sendMetricRequest(ctx context.Context, opts sendMetricRequestOpts) error {
+	client := resty.New()
 	url := opts.ServerAddress + updateAPIEndpoint
 
 	var buf bytes.Buffer
-	if err = json.NewEncoder(&buf).Encode(metric); err != nil {
-		return fmt.Errorf("worker.SendMetric: %w", err)
+	if err := json.NewEncoder(&buf).Encode(opts.batch); err != nil {
+		return fmt.Errorf("worker.sendMetricReq: %w", err)
 	}
 
 	body, err := compress.GZipCompress(buf.Bytes())
 	if err != nil {
-		return fmt.Errorf("worker.SendMetric: %w", err)
+		return fmt.Errorf("worker.sendMetricReq: %w", err)
 	}
 
-	req := opts.Client.R().
+	req := client.R().
 		SetContext(ctx).
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Content-Encoding", "gzip").
@@ -182,7 +263,7 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 		SetBody(body).
 		Post(url)
 	if err != nil {
-		return fmt.Errorf("worker.SendMetric: %w", err)
+		return fmt.Errorf("worker.sendMetricReq: %w", err)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
@@ -192,4 +273,22 @@ func SendMetric(ctx context.Context, opts SendMetricOpts) error {
 	}
 
 	return nil
+}
+
+func (w *MetricsWorker) sendMetricsLoop(ctx context.Context, errCh chan error) {
+	ticker := time.NewTicker(w.Opts.ReportInterval)
+	defer ticker.Stop()
+	for t := range ticker.C {
+		log.Debug().Msgf("metrics sender start at: %s", t.String())
+		select {
+		case <-ctx.Done():
+			log.Debug().Msg("metrics sender worker finished")
+			return
+		case data, ok := <-w.MetricsCh:
+			if ok {
+				errCh <- w.sendMetrics(ctx, data)
+			}
+		default:
+		}
+	}
 }
