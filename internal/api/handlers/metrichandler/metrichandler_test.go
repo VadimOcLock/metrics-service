@@ -506,9 +506,9 @@ func TestMetricHandler_UpdateMetricJSON(t *testing.T) {
 			handler.UpdateMetricJSON(w, req)
 
 			res := w.Result()
-			defer func(Body io.ReadCloser) {
-				_ = Body.Close()
-			}(res.Body)
+			defer func() {
+				_ = res.Body.Close()
+			}()
 			body, _ := io.ReadAll(res.Body)
 
 			assert.Equal(t, tt.want.statusCode, res.StatusCode)
@@ -574,9 +574,9 @@ func TestMetricHandler_Ping(t *testing.T) {
 			pingHandler(w, req)
 
 			res := w.Result()
-			defer func(Body io.ReadCloser) {
-				_ = Body.Close()
-			}(res.Body)
+			defer func() {
+				_ = res.Body.Close()
+			}()
 
 			body, _ := io.ReadAll(res.Body)
 			assert.Equal(t, tt.wantCode, res.StatusCode)
@@ -668,9 +668,9 @@ func TestMetricHandler_UpdateMetricBatch(t *testing.T) {
 			assert.Equal(t, tt.wantCode, res.StatusCode)
 
 			body, _ := io.ReadAll(res.Body)
-			defer func(Body io.ReadCloser) {
-				_ = Body.Close()
-			}(res.Body)
+			defer func() {
+				_ = res.Body.Close()
+			}()
 			assert.Equal(t, tt.wantBody, string(body))
 		})
 	}
@@ -767,9 +767,9 @@ func TestMetricHandler_GetMetricValueJSON(t *testing.T) {
 			assert.Equal(t, tt.wantCode, res.StatusCode)
 
 			body, _ := io.ReadAll(res.Body)
-			defer func(Body io.ReadCloser) {
-				_ = Body.Close()
-			}(res.Body)
+			defer func() {
+				_ = res.Body.Close()
+			}()
 			assert.Equal(t, tt.wantBody, string(body))
 		})
 	}
