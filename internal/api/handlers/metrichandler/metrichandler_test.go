@@ -1,12 +1,17 @@
 package metrichandler_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/VadimOcLock/metrics-service/internal/entity"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/VadimOcLock/metrics-service/internal/api/handlers/metrichandler"
 
@@ -391,6 +396,412 @@ func TestMetricsHandler_GetAllMetrics(t *testing.T) {
 				}()
 				assert.Equal(t, tt.want.response, string(body))
 			}
+		})
+	}
+}
+
+func TestMetricHandler_UpdateMetricJSON(t *testing.T) {
+	type input struct {
+		method string
+		body   string
+	}
+	type want struct {
+		statusCode int
+		response   string
+	}
+	tests := []struct {
+		name      string
+		input     input
+		want      want
+		mockSetup func(useCase *mocks.MetricUseCase)
+	}{
+		{
+			name: "non-POST method",
+			input: input{
+				method: http.MethodGet,
+			},
+			want: want{
+				statusCode: http.StatusMethodNotAllowed,
+				response:   errorz.ErrMsgOnlyPOSTMethodAccept + "\n",
+			},
+			mockSetup: nil,
+		},
+		{
+			name: "decode error",
+			input: input{
+				method: http.MethodPost,
+				body:   `invalid-json`,
+			},
+			want: want{
+				statusCode: http.StatusBadRequest,
+				response:   errorz.ErrInvalidRequestBody + "\n",
+			},
+			mockSetup: nil,
+		},
+		{
+			name: "validation error",
+			input: input{
+				method: http.MethodPost,
+				body:   `{"id":"test_metric","type":"unknown_metric_type"}`,
+			},
+			want: want{
+				statusCode: http.StatusBadRequest,
+				response:   "unknown metric type: " + "unknown_metric_type\n",
+			},
+			mockSetup: func(useCase *mocks.MetricUseCase) {},
+		},
+		{
+			name: "update error",
+			input: input{
+				method: http.MethodPost,
+				body:   `{"id":"test_metric","type":"gauge","value":123.45}`,
+			},
+			want: want{
+				statusCode: http.StatusBadRequest,
+				response:   "update error\n",
+			},
+			mockSetup: func(useCase *mocks.MetricUseCase) {
+				useCase.On("Update", mock.Anything, metricusecase.MetricUpdateDTO{
+					Type:  "gauge",
+					Name:  "test_metric",
+					Value: "123.45",
+				}).Return(metricusecase.MetricUpdateResp{}, errors.New("update error"))
+			},
+		},
+		{
+			name: "successful update",
+			input: input{
+				method: http.MethodPost,
+				body:   `{"id":"test_metric","type":"gauge","value":123.45}`,
+			},
+			want: want{
+				statusCode: http.StatusOK,
+				response:   `{"message":"Metric updated successfully"}`,
+			},
+			mockSetup: func(useCase *mocks.MetricUseCase) {
+				useCase.On("Update", mock.Anything, metricusecase.MetricUpdateDTO{
+					Type:  "gauge",
+					Name:  "test_metric",
+					Value: "123.45",
+				}).Return(metricusecase.MetricUpdateResp{
+					Message: "Metric updated successfully",
+				}, nil)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			useCase := mocks.NewMetricUseCase(t)
+			if tt.mockSetup != nil {
+				tt.mockSetup(useCase)
+			}
+
+			handler := metrichandler.NewMetricHandler(useCase)
+
+			req := httptest.NewRequest(tt.input.method, "/", bytes.NewBufferString(tt.input.body))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			handler.UpdateMetricJSON(w, req)
+
+			res := w.Result()
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(res.Body)
+			body, _ := io.ReadAll(res.Body)
+
+			assert.Equal(t, tt.want.statusCode, res.StatusCode)
+			assert.Equal(t, tt.want.response, string(body))
+		})
+	}
+}
+
+func TestMetricHandler_Ping(t *testing.T) {
+	tests := []struct {
+		name      string
+		method    string
+		mockSetup func(pool *mocks.Pool)
+		wantCode  int
+		wantBody  string
+	}{
+		{
+			name:     "non-GET method",
+			method:   http.MethodPost,
+			wantCode: http.StatusMethodNotAllowed,
+			wantBody: http.StatusText(http.StatusMethodNotAllowed) + "\n",
+		},
+		{
+			name:     "pool is nil",
+			method:   http.MethodGet,
+			wantCode: http.StatusInternalServerError,
+			wantBody: "database unavailable now\n",
+		},
+		{
+			name:   "ping database error",
+			method: http.MethodGet,
+			mockSetup: func(pool *mocks.Pool) {
+				pool.On("Ping", context.Background()).Return(errors.New("ping error"))
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: "database unavailable now\n",
+		},
+		{
+			name:   "successful ping",
+			method: http.MethodGet,
+			mockSetup: func(pool *mocks.Pool) {
+				pool.On("Ping", context.Background()).Return(nil)
+			},
+			wantCode: http.StatusOK,
+			wantBody: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var pool *mocks.Pool
+			if tt.mockSetup != nil {
+				pool = mocks.NewPool(t)
+				tt.mockSetup(pool)
+			}
+
+			handler := metrichandler.MetricHandler{}
+			pingHandler := handler.Ping(pool)
+
+			req := httptest.NewRequest(tt.method, "/ping", nil)
+			w := httptest.NewRecorder()
+
+			pingHandler(w, req)
+
+			res := w.Result()
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(res.Body)
+
+			body, _ := io.ReadAll(res.Body)
+			assert.Equal(t, tt.wantCode, res.StatusCode)
+			assert.Equal(t, tt.wantBody, string(body))
+		})
+	}
+}
+
+func TestMetricHandler_UpdateMetricBatch(t *testing.T) {
+	tests := []struct {
+		name         string
+		method       string
+		body         string
+		mockBehavior func(useCase *mocks.MetricUseCase)
+		wantCode     int
+		wantBody     string
+	}{
+		{
+			name:         "method not allowed",
+			method:       http.MethodGet,
+			body:         "",
+			mockBehavior: func(useCase *mocks.MetricUseCase) {},
+			wantCode:     http.StatusMethodNotAllowed,
+			wantBody:     "Method Not Allowed\n",
+		},
+		{
+			name:         "invalid JSON body",
+			method:       http.MethodPost,
+			body:         "{invalid-json",
+			mockBehavior: func(useCase *mocks.MetricUseCase) {},
+			wantCode:     http.StatusBadRequest,
+			wantBody:     "invalid character 'i' looking for beginning of object key string\n",
+		},
+		{
+			name:   "use case returns error",
+			method: http.MethodPost,
+			body: `[
+				{"id":"metric1","type":"gauge","value":123.45},
+				{"id":"metric2","type":"counter","delta":10}
+			]`,
+			mockBehavior: func(useCase *mocks.MetricUseCase) {
+				vl := 123.45
+				delta := int64(10)
+				useCase.On("UpdateBatch", mock.Anything, metricusecase.MetricsUpdateBatchDTO{
+					Data: &[]entity.Metrics{
+						{ID: "metric1", MType: "gauge", Value: &vl},
+						{ID: "metric2", MType: "counter", Delta: &delta},
+					},
+				}).Return(errors.New("update batch error"))
+			},
+			wantCode: http.StatusBadRequest,
+			wantBody: "update batch error\n",
+		},
+		{
+			name:   "successful update",
+			method: http.MethodPost,
+			body: `[
+				{"id":"metric1","type":"gauge","value":123.45},
+				{"id":"metric2","type":"counter","delta":10}
+			]`,
+			mockBehavior: func(useCase *mocks.MetricUseCase) {
+				vl := 123.45
+				delta := int64(10)
+				useCase.On("UpdateBatch", mock.Anything, metricusecase.MetricsUpdateBatchDTO{
+					Data: &[]entity.Metrics{
+						{ID: "metric1", MType: "gauge", Value: &vl},
+						{ID: "metric2", MType: "counter", Delta: &delta},
+					},
+				}).Return(nil)
+			},
+			wantCode: http.StatusOK,
+			wantBody: "success update metrics",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			useCase := mocks.NewMetricUseCase(t)
+			tt.mockBehavior(useCase)
+
+			h := metrichandler.NewMetricHandler(useCase)
+
+			req := httptest.NewRequest(tt.method, "/update-batch", strings.NewReader(tt.body))
+			w := httptest.NewRecorder()
+
+			h.UpdateMetricBatch(w, req)
+
+			res := w.Result()
+			assert.Equal(t, tt.wantCode, res.StatusCode)
+
+			body, _ := io.ReadAll(res.Body)
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(res.Body)
+			assert.Equal(t, tt.wantBody, string(body))
+		})
+	}
+}
+
+func TestMetricHandler_GetMetricValueJSON(t *testing.T) {
+	tests := []struct {
+		name         string
+		method       string
+		body         string
+		mockBehavior func(useCase *mocks.MetricUseCase)
+		wantCode     int
+		wantBody     string
+	}{
+		{
+			name:   "method not allowed",
+			method: http.MethodGet,
+			body:   "",
+			mockBehavior: func(useCase *mocks.MetricUseCase) {
+			},
+			wantCode: http.StatusMethodNotAllowed,
+			wantBody: "Method Not Allowed\n",
+		},
+		{
+			name:   "invalid JSON body",
+			method: http.MethodPost,
+			body:   "{invalid-json",
+			mockBehavior: func(useCase *mocks.MetricUseCase) {
+			},
+			wantCode: http.StatusBadRequest,
+			wantBody: "invalid character 'i' looking for beginning of object key string\n",
+		},
+		{
+			name:   "metric not found",
+			method: http.MethodPost,
+			body:   `{"id":"metric1","type":"gauge"}`,
+			mockBehavior: func(useCase *mocks.MetricUseCase) {
+				useCase.On("Find", mock.Anything, metricusecase.MetricFindDTO{
+					MetricType: "gauge",
+					MetricName: "metric1",
+				}).Return(metricusecase.MetricFindResp{}, errorz.ErrMetricNotFound)
+			},
+			wantCode: http.StatusNotFound,
+			wantBody: errorz.ErrMetricNotFound.Error() + "\n",
+		},
+		{
+			name:   "internal server error",
+			method: http.MethodPost,
+			body:   `{"id":"metric1","type":"gauge"}`,
+			mockBehavior: func(useCase *mocks.MetricUseCase) {
+				useCase.On("Find", mock.Anything, metricusecase.MetricFindDTO{
+					MetricType: "gauge",
+					MetricName: "metric1",
+				}).Return(metricusecase.MetricFindResp{}, errors.New("internal server error"))
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: "Internal Server Error\n",
+		},
+		{
+			name:   "successful find",
+			method: http.MethodPost,
+			body:   `{"id":"metric1","type":"gauge"}`,
+			mockBehavior: func(useCase *mocks.MetricUseCase) {
+				expVl := 123.45
+				expData := entity.Metrics{
+					ID:    "metric1",
+					MType: "gauge",
+					Value: &expVl,
+				}
+				useCase.On("Find", mock.Anything, metricusecase.MetricFindDTO{
+					MetricType: "gauge",
+					MetricName: "metric1",
+				}).Return(metricusecase.MetricFindResp{
+					Data: &expData,
+				}, nil)
+			},
+			wantCode: http.StatusOK,
+			wantBody: `{"id":"metric1","type":"gauge","value":123.45}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			useCase := mocks.NewMetricUseCase(t)
+			tt.mockBehavior(useCase)
+			h := metrichandler.NewMetricHandler(useCase)
+
+			req := httptest.NewRequest(tt.method, "/get-metric-value", strings.NewReader(tt.body))
+			w := httptest.NewRecorder()
+
+			h.GetMetricValueJSON(w, req)
+
+			res := w.Result()
+			assert.Equal(t, tt.wantCode, res.StatusCode)
+
+			body, _ := io.ReadAll(res.Body)
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(res.Body)
+			assert.Equal(t, tt.wantBody, string(body))
+		})
+	}
+}
+
+func TestGetMetricsValidateErr(t *testing.T) {
+	tests := []struct {
+		name     string
+		inputErr error
+		want     bool
+	}{
+		{
+			name:     "some expected error",
+			inputErr: errorz.ErrUndefinedMetricType,
+			want:     true,
+		},
+		{
+			name:     "unrelated error",
+			inputErr: errors.New("some unrelated error"),
+			want:     false,
+		},
+		{
+			name:     "nil error",
+			inputErr: nil,
+			want:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := metrichandler.GetMetricsValidateErr(tt.inputErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

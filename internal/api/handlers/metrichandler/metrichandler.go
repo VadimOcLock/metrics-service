@@ -1,13 +1,12 @@
 package metrichandler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/jackc/pgx/v5/pgxpool"
+	"reflect"
 
 	"github.com/rs/zerolog/log"
 
@@ -86,7 +85,7 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 	var dto entity.Metrics
 	if err := json.NewDecoder(req.Body).Decode(&dto); err != nil {
 		log.Error().Msgf("decode err: %s", err)
-		http.Error(res, fmt.Errorf("decode err: %w", err).Error(), http.StatusBadRequest)
+		http.Error(res, errorz.ErrInvalidRequestBody, http.StatusBadRequest)
 
 		return
 	}
@@ -122,7 +121,8 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 	}
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
-	respBody, err := json.Marshal(bodyObj.Data)
+	// respBody, err := json.Marshal(bodyObj.Data)
+	respBody, err := json.Marshal(bodyObj)
 	if err != nil {
 		log.Error().Msgf("marshalling response body err: %s", err)
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -273,7 +273,9 @@ func (h *MetricHandler) UpdateMetricBatch(res http.ResponseWriter, req *http.Req
 
 		return
 	}
-	defer req.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(req.Body)
 	if err := h.MetricsUseCase.UpdateBatch(req.Context(),
 		metricusecase.MetricsUpdateBatchDTO{Data: &metrics}); err != nil {
 		log.Error().Msgf("update metrics err: %s", err)
@@ -291,7 +293,7 @@ func (h *MetricHandler) UpdateMetricBatch(res http.ResponseWriter, req *http.Req
 	}
 }
 
-func (h *MetricHandler) Ping(pool *pgxpool.Pool) func(res http.ResponseWriter, req *http.Request) {
+func (h *MetricHandler) Ping(pool Pool) func(res http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			log.Debug().Msg("http.StatusMethodNotAllowed")
@@ -299,7 +301,7 @@ func (h *MetricHandler) Ping(pool *pgxpool.Pool) func(res http.ResponseWriter, r
 
 			return
 		}
-		if pool == nil {
+		if pool == nil || reflect.ValueOf(pool).IsNil() {
 			http.Error(w, "database unavailable now", http.StatusInternalServerError)
 
 			return
@@ -311,4 +313,8 @@ func (h *MetricHandler) Ping(pool *pgxpool.Pool) func(res http.ResponseWriter, r
 		}
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+type Pool interface {
+	Ping(ctx context.Context) error
 }

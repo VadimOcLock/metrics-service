@@ -86,11 +86,13 @@ func (w *MetricsWorker) collectRuntimeMetricsLoop(ctx context.Context, errCh cha
 		data, err := w.collectRuntimeMetrics(ctx)
 		if err != nil {
 			errCh <- fmt.Errorf("collect runtime metrics err: %w", err)
+
 			continue
 		}
 		select {
 		case <-ctx.Done():
 			log.Debug().Msg("runtime metrics collector finished")
+
 			return
 		case w.MetricsCh <- data:
 		default:
@@ -127,11 +129,13 @@ func (w *MetricsWorker) collectSystemMetricsLoop(ctx context.Context, errCh chan
 		data, err := w.collectSystemMetrics(ctx)
 		if err != nil {
 			errCh <- fmt.Errorf("collect system metrics err: %w", err)
+
 			continue
 		}
 		select {
 		case <-ctx.Done():
 			log.Debug().Msg("system metrics collector finished")
+
 			return
 		case w.MetricsCh <- data:
 		default:
@@ -145,6 +149,7 @@ func (w *MetricsWorker) sendMetrics(ctx context.Context, m entity.MetricsData) e
 	if err != nil {
 		return err
 	}
+
 	return sendMetricRequest(ctx, sendMetricRequestOpts{
 		ServerAddress:      w.Opts.ServerAddr,
 		SecretSignatureKey: w.Opts.SecretSignatureKey,
@@ -157,7 +162,7 @@ func buildMetricsBatch(gs map[string]entity.Gauge, cs map[string]entity.Counter)
 	if outLen == 0 {
 		return nil, errorz.ErrTrySendEmptyData
 	}
-	res := make([]entity.Metrics, outLen)
+	res := make([]entity.Metrics, 0, outLen)
 	for name, val := range gs {
 		vl := float64(val)
 		if val == 0 {
@@ -283,6 +288,7 @@ func (w *MetricsWorker) sendMetricsLoop(ctx context.Context, errCh chan error) {
 		select {
 		case <-ctx.Done():
 			log.Debug().Msg("metrics sender worker finished")
+
 			return
 		case data, ok := <-w.MetricsCh:
 			if ok {

@@ -24,4 +24,5 @@ const (
 	ErrMsgEmptyMetricParam     = "empty metric param"
 	ErrMsgFindAllMetrics       = "find all metrics error"
 	ErrMsgFindMetric           = "find metric error"
+	ErrInvalidRequestBody      = "invalid request body"
 )

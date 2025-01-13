@@ -7,6 +7,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/caarlos0/env/v11"
+
+	_ "net/http/pprof"
+
 	"github.com/VadimOcLock/metrics-service/internal/store/migrations"
 
 	"github.com/VadimOcLock/metrics-service/internal/store/pgstore"
@@ -38,7 +42,7 @@ func main() {
 	ctx := context.Background()
 
 	// HandlerConfig.
-	cfg, err := config.Load[config.WebServer]()
+	cfg, err := env.ParseAs[config.WebServer]()
 	if err != nil {
 		log.Fatal().Msgf("cfg load err: %v", err)
 	}

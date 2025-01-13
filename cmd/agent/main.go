@@ -6,6 +6,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/caarlos0/env/v11"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -20,7 +22,7 @@ func main() {
 	ctx := context.Background()
 
 	// Config.
-	cfg, err := config.Load[config.Agent]()
+	cfg, err := env.ParseAs[config.Agent]()
 	if err != nil {
 		log.Fatal().Msgf("cfg load err: %v", err)
 	}

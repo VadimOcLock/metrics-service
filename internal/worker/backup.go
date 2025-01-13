@@ -44,7 +44,7 @@ func (w *BackupWorker) SaveToFile(metrics []entity.Metrics) error {
 		return err
 	}
 
-	file, err := os.OpenFile(w.opts.Filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(w.opts.Filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func NewBackupWorker(
 	uc *metricusecase.MetricUseCase,
 	opts MetricsBackupOpts,
 ) (*BackupWorker, error) {
-	file, err := os.OpenFile(opts.Filepath, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(opts.Filepath, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
@@ -159,40 +159,3 @@ func (w *BackupWorker) Run(ctx context.Context) error {
 		}
 	}
 }
-
-//func (w *BackupWorker) findMetrics(ctx context.Context) ([]entity.Metrics, error) {
-//	metricsDTO, err := w.service.FindAll(ctx, metricservice.FindAllDTO{})
-//	if err != nil {
-//		return nil, err
-//	}
-//	var metrics []entity.Metrics
-//	for _, dto := range metricsDTO {
-//		vl, aErr := anyToString(dto.Value)
-//		if aErr != nil {
-//			log.Error().Msgf("uncorrect convert to string: %v", dto.Value)
-//			vl = ""
-//		}
-//		m, bErr := entity.BuildMetrics(entity.MetricDTO{
-//			Type:  dto.Type,
-//			Name:  dto.Name,
-//			Value: vl,
-//		})
-//		if bErr != nil {
-//			continue
-//		}
-//		metrics = append(metrics, m)
-//	}
-//
-//	return metrics, nil
-//}
-
-//func anyToString(value any) (string, error) {
-//	switch v := value.(type) {
-//	case int64:
-//		return strconv.Itoa(int(v)), nil
-//	case float64:
-//		return strconv.FormatFloat(v, 'f', -1, 64), nil
-//	default:
-//		return "", fmt.Errorf("unsupported type: %T", value)
-//	}
-//}

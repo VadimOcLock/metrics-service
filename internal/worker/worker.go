@@ -45,7 +45,7 @@ func (w *MetricsWorker) Run(ctx context.Context) error {
 		w.collectSystemMetricsLoop(ctx, errCh)
 	}()
 
-	//Collect runtime metrics.
+	// Collect runtime metrics.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

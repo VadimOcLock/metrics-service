@@ -3,8 +3,6 @@ package metricservice
 type UpdateGaugeDTO UpsertGaugeMetricParams
 
 func (dto *UpdateGaugeDTO) Valid() error {
-	// todo
-
 	return nil
 }
 

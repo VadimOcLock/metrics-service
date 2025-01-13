@@ -41,6 +41,7 @@ func Logger(next http.Handler) http.Handler {
 		_, err := io.ReadAll(tee)
 		if err != nil {
 			http.Error(w, "can't read request body", http.StatusInternalServerError)
+
 			return
 		}
 		r.Body = io.NopCloser(&requestBody)

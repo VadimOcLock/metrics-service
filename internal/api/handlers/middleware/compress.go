@@ -10,7 +10,7 @@ import (
 )
 
 // compressWriter реализует интерфейс http.ResponseWriter и позволяет прозрачно для сервера
-// сжимать передаваемые данные и выставлять правильные HTTP-заголовки
+// сжимать передаваемые данные и выставлять правильные HTTP-заголовки.
 type compressWriter struct {
 	w  http.ResponseWriter
 	zw *gzip.Writer
@@ -43,7 +43,7 @@ func (c *compressWriter) Close() error {
 }
 
 // CompressReader реализует интерфейс io.ReadCloser и позволяет прозрачно для сервера
-// декомпрессировать получаемые от клиента данные
+// декомпрессировать получаемые от клиента данные.
 type CompressReader struct {
 	r  io.ReadCloser
 	zr *gzip.Reader
@@ -61,7 +61,7 @@ func NewCompressReader(r io.ReadCloser) (*CompressReader, error) {
 	}, nil
 }
 
-func (c *CompressReader) Read(p []byte) (n int, err error) {
+func (c *CompressReader) Read(p []byte) (int, error) {
 	return c.zr.Read(p)
 }
 
@@ -69,6 +69,7 @@ func (c *CompressReader) Close() error {
 	if err := c.r.Close(); err != nil {
 		return err
 	}
+
 	return c.zr.Close()
 }
 
@@ -95,6 +96,7 @@ func GZipMiddleware(h http.Handler) http.Handler {
 			cr, err := NewCompressReader(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
+
 				return
 			}
 			r.Body = cr

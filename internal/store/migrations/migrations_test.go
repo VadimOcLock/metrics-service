@@ -1,6 +1,10 @@
-package migrations
+package migrations_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/VadimOcLock/metrics-service/internal/store/migrations"
+)
 
 func Test_dbNameByDSN(t *testing.T) {
 	type args struct {
@@ -46,13 +50,14 @@ func Test_dbNameByDSN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dbNameByDSN(tt.args.dsn)
+			got, err := migrations.DBNameByDSN(tt.args.dsn)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("dbNameByDSN() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DBNameByDSN() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if got != tt.want {
-				t.Errorf("dbNameByDSN() got = %v, want %v", got, tt.want)
+				t.Errorf("DBNameByDSN() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

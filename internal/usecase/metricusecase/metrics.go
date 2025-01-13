@@ -65,7 +65,7 @@ func (uc *MetricUseCase) FindAll(ctx context.Context, _ MetricFindAllDTO) (Metri
 	if err != nil {
 		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
 	}
-	html, err := buildHTMLNew(metrics)
+	html, err := uc.htmlBuilder.BuildHTML(metrics)
 	if err != nil {
 		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
 	}

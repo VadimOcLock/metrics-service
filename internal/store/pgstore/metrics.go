@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/safeblock-dev/werr"
+
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 	"github.com/VadimOcLock/metrics-service/internal/entity/enum"
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
@@ -23,14 +25,17 @@ do update set
 returning true as updated;
 `
 
-func (q *Queries) UpsertGaugeMetric(ctx context.Context, arg metricservice.UpsertGaugeMetricParams) (bool, error) {
+func (q *Queries) UpsertGaugeMetric(
+	ctx context.Context,
+	arg metricservice.UpsertGaugeMetricParams,
+) (bool, error) {
 	row := q.db.QueryRow(ctx, upsertGaugeMetric,
 		arg.Name,
 		arg.Value)
 	var updated bool
 	err := row.Scan(&updated)
 
-	return updated, err
+	return updated, werr.Wrap(err)
 }
 
 const upsertCounterMetric = `
@@ -44,7 +49,10 @@ do update set
 returning true as updated;
 `
 
-func (q *Queries) UpsertCounterMetric(ctx context.Context, arg metricservice.UpsertCounterMetricParams) (bool, error) {
+func (q *Queries) UpsertCounterMetric(
+	ctx context.Context,
+	arg metricservice.UpsertCounterMetricParams,
+) (bool, error) {
 	row := q.db.QueryRow(ctx, upsertCounterMetric,
 		arg.Name,
 		arg.Value)
@@ -59,7 +67,10 @@ select id, type, delta, value
 from metrics;
 `
 
-func (q *Queries) FindAllMetrics(ctx context.Context, arg metricservice.FindAllMetricsNewParams) ([]entity.Metrics, error) {
+func (q *Queries) FindAllMetrics(
+	ctx context.Context,
+	arg metricservice.FindAllMetricsNewParams,
+) ([]entity.Metrics, error) {
 	rows, err := q.db.Query(ctx, findAllMetrics)
 	if err != nil {
 		return nil, err
@@ -91,7 +102,10 @@ from metrics
 where id = $1;
 `
 
-func (q *Queries) FindCounterMetrics(ctx context.Context, arg metricservice.FindCounterMetricParams) (entity.Metrics, error) {
+func (q *Queries) FindCounterMetrics(
+	ctx context.Context,
+	arg metricservice.FindCounterMetricParams,
+) (entity.Metrics, error) {
 	row := q.db.QueryRow(ctx, findCounterMetrics, arg.MetricName)
 	var m entity.Metrics
 	err := row.Scan(
@@ -111,7 +125,10 @@ from metrics
 where id = $1;
 `
 
-func (q *Queries) FindGaugeMetrics(ctx context.Context, arg metricservice.FindGaugeMetricParams) (entity.Metrics, error) {
+func (q *Queries) FindGaugeMetrics(
+	ctx context.Context,
+	arg metricservice.FindGaugeMetricParams,
+) (entity.Metrics, error) {
 	row := q.db.QueryRow(ctx, findGaugeMetrics, arg.MetricName)
 	var m entity.Metrics
 	err := row.Scan(
@@ -125,13 +142,10 @@ func (q *Queries) FindGaugeMetrics(ctx context.Context, arg metricservice.FindGa
 	return m, err
 }
 
-const updateBatch = `
-insert into metrics (id, type, delta, value)
-values %s
-ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, delta = EXCLUDED.delta, value = EXCLUDED.value;
-`
-
-func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
+func (s *PgStore) UpdateMetricsBatchTx(
+	ctx context.Context,
+	arg metricservice.UpdateMetricsBatchTxParams,
+) error {
 	return s.ExecTx(ctx, func(q *Queries) error {
 		metrics := *arg.Data
 		for _, m := range metrics {
@@ -158,40 +172,7 @@ func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.Up
 				}
 			}
 		}
+
 		return nil
 	})
 }
-
-//func (s *PgStore) UpdateMetricsBatchTx(ctx context.Context, arg metricservice.UpdateMetricsBatchTxParams) error {
-//	return s.ExecTx(ctx, func(q *Queries) error {
-//		const batchSize = 100
-//		metrics := *arg.Data
-//		for i := 0; i < len(metrics); i += batchSize {
-//			end := i + batchSize
-//			if end > len(metrics) {
-//				end = len(metrics)
-//			}
-//			batch := metrics[i:end]
-//
-//			values := make([]string, 0, len(batch))
-//			args := make([]interface{}, 0, len(batch)*4)
-//
-//			uniqueMetrics := make(map[string]entity.Metrics)
-//
-//			for _, metric := range batch {
-//				if _, exists := uniqueMetrics[metric.ID]; !exists {
-//					uniqueMetrics[metric.ID] = metric
-//					values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d)",
-//						len(args)+1, len(args)+2, len(args)+3, len(args)+4))
-//					args = append(args, metric.ID, metric.MType, metric.Delta, metric.Value)
-//				}
-//			}
-//			query := fmt.Sprintf(updateBatch, strings.Join(values, ", "))
-//
-//			if _, err := q.db.Exec(ctx, query, args...); err != nil {
-//				return err
-//			}
-//		}
-//		return nil
-//	})
-//}

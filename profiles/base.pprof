@@ -1,0 +1,124 @@
+PeriodType: space bytes
+Period: 524288
+Time: 2025-01-13 08:56:40.7914158 +0300 MSK
+Duration: 30.0
+Samples:
+alloc_objects/count alloc_space/bytes inuse_objects/count inuse_space/bytes
+          1     924248          0          0: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 
+                bytes:[663552]
+       2049     524416          0          0: 16 
+                bytes:[256]
+       3073    1573632          0          0: 16 
+                bytes:[512]
+       1025    1049600          0          0: 16 
+                bytes:[1024]
+       1539    3151876          0          0: 16 
+                bytes:[2048]
+        899    3684370          0          0: 16 
+                bytes:[4096]
+       1400    9498372          0          0: 16 
+                bytes:[6784]
+       1034   10588494          0          0: 16 
+                bytes:[10240]
+        631    9035307          0          0: 16 
+                bytes:[14336]
+        890  116732709          0          0: 16 
+                bytes:[131072]
+        928   25287793          0          0: 16 
+                bytes:[27264]
+        979  344876100          0          0: 16 
+                bytes:[352256]
+        942  416826430          0          0: 16 
+                bytes:[442368]
+        997  277764097          0          0: 16 
+                bytes:[278528]
+        965  166049887          0          0: 16 
+                bytes:[172032]
+        985  217852598          0          0: 16 
+                bytes:[221184]
+        965   94870892          0          0: 16 
+                bytes:[98304]
+        946   54241292          0          0: 16 
+                bytes:[57344]
+        966 95206981632         -1  -98557952: 16 
+                bytes:[98557952]
+        966 76159254528         -1  -78839808: 16 
+                bytes:[78839808]
+        967 60988891136          1   63070208: 16 
+                bytes:[63070208]
+        967 48789528576          1   50454528: 16 
+                bytes:[50454528]
+        967 39030038528          1   40361984: 16 
+                bytes:[40361984]
+        967 31219277824          1   32284672: 16 
+                bytes:[32284672]
+        967 24969084928          1   25821184: 16 
+                bytes:[25821184]
+        967 19970514944          0          0: 16 
+                bytes:[20652032]
+        967 15970074624          0          0: 16 
+                bytes:[16515072]
+        967 12769722368          0          0: 16 
+                bytes:[13205504]
+        967 10211024914          0          0: 16 
+                bytes:[10559488]
+        967 8167236408          0          0: 16 
+                bytes:[8445952]
+        967 6527467855          0          0: 16 
+                bytes:[6750208]
+        967 5220552709          0          0: 16 
+                bytes:[5398528]
+        967 4175825078          0          0: 16 
+                bytes:[4317184]
+        966 3329303291          0          0: 16 
+                bytes:[3448832]
+        969 2667418898          0          0: 16 
+                bytes:[2752512]
+        964 2115611610          0          0: 16 
+                bytes:[2195456]
+        972 1702758172          0          0: 16 
+                bytes:[1753088]
+        959 1342327152          0          0: 16 
+                bytes:[1400832]
+        954 1062785735          0          0: 16 
+                bytes:[1114112]
+        983  869518236          0          0: 16 
+                bytes:[884736]
+        958  674835979          0          0: 16 
+                bytes:[704512]
+        947  527765647          0          0: 16 
+                bytes:[557056]
+        952   70251964          0          0: 16 
+                bytes:[73728]
+        825   33792148          0          0: 16 
+                bytes:[40960]
+        940   19245408          0          0: 16 
+                bytes:[20480]
+       4096     524352       4096     524352: 17 18 19 20 21 9 10 11 12 13 14 15 
+                bytes:[128]
+Locations
+     1: 0x310ec4 M=1 compress/flate.NewWriter C:/Users/user/sdk/go1.23.1/src/compress/flate/deflate.go:667:0 s=666
+             compress/gzip.(*Writer).Write C:/Users/user/sdk/go1.23.1/src/compress/gzip/gzip.go:191:0 s=139
+     2: 0x37888a M=1 runtime/pprof.(*profileBuilder).flush C:/Users/user/sdk/go1.23.1/src/runtime/pprof/proto.go:146:0 s=143
+     3: 0x378fc7 M=1 runtime/pprof.(*profileBuilder).pbSample C:/Users/user/sdk/go1.23.1/src/runtime/pprof/proto.go:168:0 s=160
+     4: 0x3813e4 M=1 runtime/pprof.writeHeapProto C:/Users/user/sdk/go1.23.1/src/runtime/pprof/protomem.go:60:0 s=16
+     5: 0x3765e4 M=1 runtime/pprof.writeHeapInternal C:/Users/user/sdk/go1.23.1/src/runtime/pprof/pprof.go:631:0 s=599
+     6: 0x3762a4 M=1 runtime/pprof.writeHeap C:/Users/user/sdk/go1.23.1/src/runtime/pprof/pprof.go:590:0 s=589
+     7: 0x37450a M=1 runtime/pprof.(*Profile).WriteTo C:/Users/user/sdk/go1.23.1/src/runtime/pprof/pprof.go:374:0 s=369
+     8: 0x38ef04 M=1 net/http/pprof.collectProfile C:/Users/user/sdk/go1.23.1/src/net/http/pprof/pprof.go:341:0 s=339
+     9: 0x38e7c4 M=1 net/http/pprof.handler.serveDeltaProfile C:/Users/user/sdk/go1.23.1/src/net/http/pprof/pprof.go:294:0 s=275
+    10: 0x38e59c M=1 net/http/pprof.handler.ServeHTTP C:/Users/user/sdk/go1.23.1/src/net/http/pprof/pprof.go:258:0 s=250
+    11: 0x38f09d M=1 net/http/pprof.Index C:/Users/user/sdk/go1.23.1/src/net/http/pprof/pprof.go:388:0 s=385
+    12: 0x350aa8 M=1 net/http.HandlerFunc.ServeHTTP C:/Users/user/sdk/go1.23.1/src/net/http/server.go:2220:0 s=2219
+    13: 0x352949 M=1 net/http.(*ServeMux).ServeHTTP C:/Users/user/sdk/go1.23.1/src/net/http/server.go:2747:0 s=2733
+    14: 0x35990d M=1 net/http.serverHandler.ServeHTTP C:/Users/user/sdk/go1.23.1/src/net/http/server.go:3210:0 s=3201
+    15: 0x34f6cf M=1 net/http.(*conn).serve C:/Users/user/sdk/go1.23.1/src/net/http/server.go:2092:0 s=1937
+    16: 0x38fee8 M=1 main.foo D:/GolangProjects/grpc/education/cmd/parser/main.go:19:0 s=13
+    17: 0x3630ac M=1 internal/profile.init.func2 C:/Users/user/sdk/go1.23.1/src/internal/profile/encode.go:146:0 s=145
+    18: 0x3708b6 M=1 internal/profile.decodeMessage C:/Users/user/sdk/go1.23.1/src/internal/profile/proto.go:260:0 s=244
+    19: 0x36c53c M=1 internal/profile.unmarshal C:/Users/user/sdk/go1.23.1/src/internal/profile/proto.go:167:0 s=165
+             internal/profile.parseUncompressed C:/Users/user/sdk/go1.23.1/src/internal/profile/profile.go:162:0 s=156
+    20: 0x36c398 M=1 internal/profile.Parse C:/Users/user/sdk/go1.23.1/src/internal/profile/profile.go:142:0 s=124
+    21: 0x38ef6c M=1 net/http/pprof.collectProfile C:/Users/user/sdk/go1.23.1/src/net/http/pprof/pprof.go:345:0 s=339
+Mappings
+1: 0x100000/0x6d3000/0x0 C:\Users\user\AppData\Local\Temp\go-build3968384527\b001\exe\main.exe C:\Users\user\AppData\Local\Temp\go-build3968384527\b001\exe\main.exe2025-01-11 06:03:37.3417828 +0300 MSK [FN]

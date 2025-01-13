@@ -20,14 +20,16 @@ func Run(dsn string, migrationsPath string) error {
 	if err != nil {
 		return err
 	}
-	defer sqlDB.Close()
+	defer func(sqlDB *sql.DB) {
+		_ = sqlDB.Close()
+	}(sqlDB)
 
 	driver, err := pgx.WithInstance(sqlDB, &pgx.Config{})
 	if err != nil {
 		return err
 	}
 
-	dbName, err := dbNameByDSN(dsn)
+	dbName, err := DBNameByDSN(dsn)
 	if err != nil {
 		return err
 	}
@@ -45,7 +47,7 @@ func Run(dsn string, migrationsPath string) error {
 	return nil
 }
 
-func dbNameByDSN(dsn string) (string, error) {
+func DBNameByDSN(dsn string) (string, error) {
 	parsedURL, err := url.Parse(dsn)
 	if err != nil {
 		return "", err
