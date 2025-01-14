@@ -89,7 +89,6 @@ func BenchmarkImpl_UpsertGaugeMetric_Update(b *testing.B) {
 			Name:  "metric1",
 			Value: float64(i),
 		}
-
 		_, err = store.UpsertGaugeMetric(context.Background(), arg)
 		if err != nil {
 			b.Fatalf("error updating metric: %v", err)
