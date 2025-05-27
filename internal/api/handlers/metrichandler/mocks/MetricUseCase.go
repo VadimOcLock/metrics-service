@@ -44,11 +44,11 @@ func (_m *MetricUseCase) Find(ctx context.Context, dto metricusecase.MetricFindD
 }
 
 // FindAll provides a mock function with given fields: ctx, _a1
-func (_m *MetricUseCase) FindAll(ctx context.Context, _a1 metricusecase.MetricFindAllDTO) (metricusecase.MetricFindAllResp, error) {
+func (_m *MetricUseCase) FindAllWithHTML(ctx context.Context, _a1 metricusecase.MetricFindAllDTO) (metricusecase.MetricFindAllResp, error) {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindAll")
+		panic("no return value specified for FindAllWithHTML")
 	}
 
 	var r0 metricusecase.MetricFindAllResp

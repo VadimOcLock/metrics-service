@@ -183,7 +183,7 @@ func TestMetricUseCase_FindAll(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name: "Successful FindAll",
+			name: "Successful FindAllWithHTML",
 			mockSetup: func(mockMetricService *mocks.MetricService, mockHTMLBuilder *mocks.HTMLBuilder) {
 				mockMetricService.On(
 					"FindAll",
@@ -205,7 +205,7 @@ func TestMetricUseCase_FindAll(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name: "Error in MetricService FindAll",
+			name: "Error in MetricService FindAllWithHTML",
 			mockSetup: func(mockMetricService *mocks.MetricService, mockHTMLBuilder *mocks.HTMLBuilder) {
 				mockMetricService.On(
 					"FindAll",
@@ -214,7 +214,7 @@ func TestMetricUseCase_FindAll(t *testing.T) {
 					Return(nil, errors.New("service error"))
 			},
 			expectedResp:  metricusecase.MetricFindAllResp{},
-			expectedError: fmt.Errorf("metricusecase.FindAll: %w", errors.New("service error")),
+			expectedError: fmt.Errorf("metricusecase.FindAllWithHTML: %w", errors.New("service error")),
 		},
 		{
 			name: "Error in HTMLBuilder BuildHTML",
@@ -232,7 +232,7 @@ func TestMetricUseCase_FindAll(t *testing.T) {
 				}).Return("", errors.New("html error"))
 			},
 			expectedResp:  metricusecase.MetricFindAllResp{},
-			expectedError: fmt.Errorf("metricusecase.FindAll: %w", errors.New("html error")),
+			expectedError: fmt.Errorf("metricusecase.FindAllWithHTML: %w", errors.New("html error")),
 		},
 	}
 
@@ -246,7 +246,7 @@ func TestMetricUseCase_FindAll(t *testing.T) {
 			}
 
 			uc := metricusecase.New(mockMetricService, metricusecase.WithHTMLBuilder(mockHTMLBuilder))
-			resp, err := uc.FindAll(context.Background(), metricusecase.MetricFindAllDTO{})
+			resp, err := uc.FindAllWithHTML(context.Background(), metricusecase.MetricFindAllDTO{})
 
 			if tt.expectedError != nil {
 				require.Error(t, err)

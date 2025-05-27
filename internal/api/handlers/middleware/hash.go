@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -61,8 +62,12 @@ type SignedResponseWriter struct {
 
 func (w *SignedResponseWriter) Write(data []byte) (int, error) {
 	w.buffer.Write(data)
+	bs, err := w.ResponseWriter.Write(data)
+	if err != nil {
+		return 0, fmt.Errorf("SignedResponseWriter err: %w", err)
+	}
 
-	return w.ResponseWriter.Write(data)
+	return bs, nil
 }
 
 func (w *SignedResponseWriter) WriteHeader(statusCode int) {

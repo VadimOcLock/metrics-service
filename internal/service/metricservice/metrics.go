@@ -33,11 +33,11 @@ func (s *Service) UpdateCounter(ctx context.Context, dto UpdateCounterDTO) error
 
 func (s *Service) FindAll(ctx context.Context, dto FindAllDTO) ([]entity.Metrics, error) {
 	if err := dto.Valid(); err != nil {
-		return nil, fmt.Errorf("metricservice.FindAll: %w", err)
+		return nil, fmt.Errorf("metricservice.FindAllWithHTML: %w", err)
 	}
 	res, err := s.Store.FindAllMetrics(ctx, FindAllMetricsNewParams{})
 	if err != nil {
-		return nil, fmt.Errorf("metricservice.FindAll: %w", err)
+		return nil, fmt.Errorf("metricservice.FindAllWithHTML: %w", err)
 	}
 
 	return res, nil

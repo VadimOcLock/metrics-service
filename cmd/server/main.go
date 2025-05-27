@@ -2,14 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 	"os"
 	"syscall"
 	"time"
 
 	"github.com/caarlos0/env/v11"
-
-	_ "net/http/pprof"
 
 	"github.com/VadimOcLock/metrics-service/internal/store/migrations"
 
@@ -70,15 +70,11 @@ func main() {
 	}()
 
 	// Store.
-	var store metricservice.Store
-	if cfg.DatabaseConfig.InMemoryMode() {
-		store = inmemorystore.New()
-	} else {
-		// Migrations.
-		if err = migrations.Run(cfg.DatabaseConfig.DSN, migrationsPath); err != nil {
-			log.Fatal().Msgf("migrations err: %v", err)
-		}
-		store = pgstore.NewPgStore(dbPool)
+	store, err := setupStore(cfg.InMemoryMode(), cfg.DSN, dbPool)
+	if err != nil {
+		log.Error().Msgf("init store failed: %v", err)
+
+		return
 	}
 
 	// Service.
@@ -99,13 +95,15 @@ func main() {
 	}
 
 	// Backup worker.
-	bw, err := worker.NewBackupWorker(&metricService, &metricUseCase, worker.MetricsBackupOpts{
+	bw, err := worker.NewBackupWorker(&metricUseCase, worker.MetricsBackupOpts{
 		Restore:  cfg.BackupConfig.Restore,
 		Interval: cfg.BackupConfig.Interval,
 		Filepath: cfg.BackupConfig.FileStoragePath,
 	})
 	if err != nil {
-		log.Fatal().Msgf("new backup worker err: %v", err)
+		log.Error().Msgf("new backup worker err: %v", err)
+
+		return
 	}
 
 	// Run app.
@@ -118,4 +116,20 @@ func main() {
 	if err = tasks.Run(); err != nil {
 		log.Debug().Msgf("tasks shutdown err: %v", err)
 	}
+}
+
+func setupStore(isMemoryMode bool, dsn string, dbPool *pgxpool.Pool) (metricservice.Store, error) {
+	var store metricservice.Store
+	if isMemoryMode {
+		store = inmemorystore.New()
+	} else {
+		if err := migrations.Run(dsn, migrationsPath); err != nil {
+			log.Error().Msgf("migrations err: %v", err)
+
+			return nil, fmt.Errorf("migrations failed: %w", err)
+		}
+		store = pgstore.NewPgStore(dbPool)
+	}
+
+	return store, nil
 }

@@ -377,12 +377,12 @@ func TestMetricsHandler_GetAllMetrics(t *testing.T) {
 
 			switch tt.name {
 			case "successful get all metrics":
-				metricUseCase.On("FindAll", r.Context(), metricusecase.MetricFindAllDTO{}).
+				metricUseCase.On("FindAllWithHTML", r.Context(), metricusecase.MetricFindAllDTO{}).
 					Return(metricusecase.MetricFindAllResp{
 						HTML: "<html>success</html>",
 					}, nil)
 			case "internal server error":
-				metricUseCase.On("FindAll", r.Context(), metricusecase.MetricFindAllDTO{}).
+				metricUseCase.On("FindAllWithHTML", r.Context(), metricusecase.MetricFindAllDTO{}).
 					Return(metricusecase.MetricFindAllResp{}, errors.New("some error"))
 			}
 

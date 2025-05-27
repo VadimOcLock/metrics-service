@@ -49,7 +49,7 @@ func (_m *MetricService) FindAll(ctx context.Context, dto metricservice.FindAllD
 	ret := _m.Called(ctx, dto)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindAll")
+		panic("no return value specified for FindAllWithHTML")
 	}
 
 	var r0 []entity.Metrics

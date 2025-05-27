@@ -60,19 +60,28 @@ func (uc *MetricUseCase) Update(ctx context.Context, dto MetricUpdateDTO) (Metri
 	}, nil
 }
 
-func (uc *MetricUseCase) FindAll(ctx context.Context, _ MetricFindAllDTO) (MetricFindAllResp, error) {
+func (uc *MetricUseCase) FindAllWithHTML(ctx context.Context, _ MetricFindAllDTO) (MetricFindAllResp, error) {
 	metrics, err := uc.metricService.FindAll(ctx, metricservice.FindAllDTO{})
 	if err != nil {
-		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
+		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAllWithHTML: %w", err)
 	}
 	html, err := uc.htmlBuilder.BuildHTML(metrics)
 	if err != nil {
-		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAll: %w", err)
+		return MetricFindAllResp{}, fmt.Errorf("metricusecase.FindAllWithHTML: %w", err)
 	}
 
 	return MetricFindAllResp{
 		HTML: html,
 	}, nil
+}
+
+func (uc *MetricUseCase) FindAll(ctx context.Context) ([]entity.Metrics, error) {
+	metrics, err := uc.metricService.FindAll(ctx, metricservice.FindAllDTO{})
+	if err != nil {
+		return nil, fmt.Errorf("find all metrics service failed: %w", err)
+	}
+
+	return metrics, nil
 }
 
 func (uc *MetricUseCase) Find(ctx context.Context, dto MetricFindDTO) (MetricFindResp, error) {

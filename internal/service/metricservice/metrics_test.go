@@ -3,7 +3,6 @@ package metricservice_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,6 +17,7 @@ import (
 )
 
 func TestService_UpdateGauge(t *testing.T) {
+	errStore := errors.New("store error")
 	tests := []struct {
 		name        string
 		dto         metricservice.UpdateGaugeDTO
@@ -48,9 +48,9 @@ func TestService_UpdateGauge(t *testing.T) {
 				store.On("UpsertGaugeMetric", mock.Anything, metricservice.UpsertGaugeMetricParams{
 					Name:  "test-gauge",
 					Value: 12.34,
-				}).Return(false, errors.New("store error"))
+				}).Return(false, errStore)
 			},
-			expectedErr: fmt.Errorf("metricservice.UpdateGauge: %w", errors.New("store error")),
+			expectedErr: errStore,
 		},
 	}
 	for _, tt := range tests {

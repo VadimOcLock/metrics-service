@@ -7,9 +7,8 @@ import (
 	"strings"
 
 	"github.com/VadimOcLock/metrics-service/internal/errorz"
-
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/pgx/v5"
+	"github.com/golang-migrate/migrate/v4/database/pgx"
 	"github.com/rs/zerolog/log"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"

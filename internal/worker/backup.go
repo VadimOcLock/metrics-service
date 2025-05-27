@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/VadimOcLock/metrics-service/internal/entity"
-	"github.com/VadimOcLock/metrics-service/internal/service/metricservice"
 	"github.com/VadimOcLock/metrics-service/internal/usecase/metricusecase"
 	"github.com/rs/zerolog/log"
 )
@@ -19,12 +18,11 @@ type BackupWorker struct {
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
 	opts    MetricsBackupOpts
-	service *metricservice.Service
 	uc      *metricusecase.MetricUseCase
 }
 
 func (w *BackupWorker) Save(ctx context.Context) error {
-	metrics, err := w.service.FindAll(ctx, metricservice.FindAllDTO{})
+	metrics, err := w.uc.FindAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -102,7 +100,6 @@ type MetricsBackupOpts struct {
 }
 
 func NewBackupWorker(
-	service *metricservice.Service,
 	uc *metricusecase.MetricUseCase,
 	opts MetricsBackupOpts,
 ) (*BackupWorker, error) {
@@ -112,7 +109,6 @@ func NewBackupWorker(
 	}
 
 	return &BackupWorker{
-		service: service,
 		uc:      uc,
 		file:    file,
 		scanner: bufio.NewScanner(file),

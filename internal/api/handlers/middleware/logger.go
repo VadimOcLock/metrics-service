@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -28,7 +29,7 @@ func (w *ResponseWriterWrapper) Write(b []byte) (int, error) {
 	bytesWritten, err := w.ResponseWriter.Write(b)
 	w.contentLength += bytesWritten
 
-	return bytesWritten, err
+	return bytesWritten, fmt.Errorf("response writer err: %w", err)
 }
 
 // Logger логгирует информацию о входящих запросах и результатах обработки запроса.

@@ -121,7 +121,6 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 	}
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
-	// respBody, err := json.Marshal(bodyObj.Data)
 	respBody, err := json.Marshal(bodyObj)
 	if err != nil {
 		log.Error().Msgf("marshalling response body err: %s", err)
@@ -143,7 +142,7 @@ func (h *MetricHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request
 
 		return
 	}
-	r, err := h.MetricsUseCase.FindAll(req.Context(), metricusecase.MetricFindAllDTO{})
+	r, err := h.MetricsUseCase.FindAllWithHTML(req.Context(), metricusecase.MetricFindAllDTO{})
 	if err != nil {
 		log.Error().Msgf("find all metrics err: %s", err)
 		http.Error(res, errorz.ErrMsgFindAllMetrics, http.StatusInternalServerError)

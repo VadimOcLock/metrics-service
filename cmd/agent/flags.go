@@ -19,6 +19,7 @@ const (
 	HTTPProtocolName          = "http"
 	defaultSecretSignatureKey = ""
 	defaultRateLimit          = 1
+	countOfAddressParts       = 2
 
 	addressEnvName        = "ADDRESS"
 	reportIntervalEnvName = "REPORT_INTERVAL"
@@ -38,7 +39,7 @@ func (n *netAddress) String() string {
 
 func (n *netAddress) Set(value string) error {
 	parts := strings.Split(value, ":")
-	if len(parts) != 2 {
+	if len(parts) != countOfAddressParts {
 		return errorz.ErrInvalidAddressFormat
 	}
 	port, err := strconv.Atoi(parts[1])

@@ -19,6 +19,7 @@ const (
 	defaultRestoreStorage     = true
 	defaultDatabaseDSN        = ""
 	defaultSecretSignatureKey = ""
+	countOfAddressParts       = 2
 )
 
 type netAddress struct {
@@ -32,8 +33,8 @@ func (n *netAddress) String() string {
 
 func (n *netAddress) Set(value string) error {
 	parts := strings.Split(value, ":")
-	if len(parts) != 2 {
-		return errorz.ErrInvalidAddressFormat
+	if len(parts) != countOfAddressParts {
+		return fmt.Errorf("invalid count of address parts: %w", errorz.ErrInvalidAddressFormat)
 	}
 	port, err := strconv.Atoi(parts[1])
 	if err != nil {
