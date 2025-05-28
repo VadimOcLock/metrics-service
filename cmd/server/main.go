@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -114,7 +115,7 @@ func main() {
 		tasks.Add(lifecycle.Worker(bw))
 	}
 	tasks.Add(lifecycle.HTTPServer(server))
-	if err = tasks.Run(); err != nil {
+	if err = tasks.Run(); err != nil && !errors.Is(err, context.Canceled) {
 		log.Debug().Msgf("tasks shutdown err: %v", err)
 	}
 }

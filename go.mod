@@ -10,8 +10,8 @@ require (
 
 require (
 	github.com/caarlos0/env/v11 v11.1.0
-	github.com/golang-migrate/migrate/v4 v4.18.1
-	github.com/jackc/pgx/v5 v5.7.1
+	github.com/golang-migrate/migrate/v4 v4.17.1
+	github.com/jackc/pgx/v5 v5.7.0
 	github.com/rs/zerolog v1.33.0
 	github.com/safeblock-dev/werr v0.0.8
 	github.com/shirou/gopsutil v3.21.11+incompatible
@@ -42,10 +42,11 @@ require (
 	github.com/tklauser/numcpus v0.8.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
+	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
