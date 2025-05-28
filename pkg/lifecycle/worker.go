@@ -10,10 +10,22 @@ import (
 	"github.com/safeblock-dev/wr/taskgroup"
 )
 
+// WorkerRunner определяет интерфейс для компонентов, которые могут работать
+// как долгоживущие воркеры.
 type WorkerRunner interface {
 	Run(ctx context.Context) error
 }
 
+// Worker создает пару функций ExecuteFn/InterruptFn для taskgroup
+// для управления жизненным циклом воркера.
+//
+// Возвращает:
+//   - execute: функция запуска воркера
+//   - interrupt: функция остановки воркера (вызывает cancel контекста)
+//
+// Пример использования:
+//
+//	tg.Add(lifecycle.Worker(myWorker))
 func Worker(
 	worker WorkerRunner,
 ) (taskgroup.ExecuteFn, taskgroup.InterruptFn) {

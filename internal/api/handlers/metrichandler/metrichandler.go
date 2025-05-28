@@ -18,12 +18,26 @@ import (
 	"github.com/VadimOcLock/metrics-service/internal/entity"
 )
 
+// MetricHandler обрабатывает HTTP-запросы для работы с метриками.
+// Содержит use case для бизнес-логики работы с метриками.
 type MetricHandler struct {
 	MetricsUseCase MetricUseCase
 }
 
+// Pool представляет интерфейс для проверки соединения с базой данных.
+type Pool interface {
+	// Ping проверяет соединение с базой данных.
+	Ping(ctx context.Context) error
+}
+
 var _ MetricUseCase = (*metricusecase.MetricUseCase)(nil)
 
+// NewMetricHandler создает новый экземпляр MetricHandler.
+// Принимает:
+//   - uc: реализацию интерфейса MetricUseCase
+//
+// Возвращает:
+//   - новый экземпляр MetricHandler
 func NewMetricHandler(
 	uc MetricUseCase,
 ) MetricHandler {
@@ -32,6 +46,9 @@ func NewMetricHandler(
 	}
 }
 
+// UpdateMetric обрабатывает POST запрос для обновления метрики через URL параметры.
+// Формат URL: /update/{type}/{name}/{value}
+// Поддерживаемые типы метрик: gauge, counter.
 func (h *MetricHandler) UpdateMetric(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, errorz.ErrMsgOnlyPOSTMethodAccept, http.StatusMethodNotAllowed)
@@ -75,6 +92,14 @@ func (h *MetricHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 	}
 }
 
+// UpdateMetricJSON обрабатывает POST запрос для обновления метрики через JSON тело.
+// Пример тела запроса:
+//
+//	{
+//	    "id": "Alloc",
+//	    "type": "gauge",
+//	    "value": 208256
+//	}
 func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, errorz.ErrMsgOnlyPOSTMethodAccept, http.StatusMethodNotAllowed)
@@ -136,6 +161,7 @@ func (h *MetricHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Requ
 	}
 }
 
+// GetAllMetrics возвращает HTML страницу со всеми текущими метриками.
 func (h *MetricHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -159,6 +185,8 @@ func (h *MetricHandler) GetAllMetrics(res http.ResponseWriter, req *http.Request
 	}
 }
 
+// GetMetricValue возвращает значение метрики в текстовом формате.
+// Формат URL: /value/{type}/{name}
 func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(res, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -197,6 +225,13 @@ func (h *MetricHandler) GetMetricValue(res http.ResponseWriter, req *http.Reques
 	}
 }
 
+// GetMetricValueJSON возвращает значение метрики в JSON формате.
+// Пример тела запроса:
+//
+//	{
+//	    "id": "Alloc",
+//	    "type": "gauge"
+//	}
 func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		log.Debug().Msg("http.StatusMethodNotAllowed")
@@ -250,6 +285,7 @@ func (h *MetricHandler) GetMetricValueJSON(res http.ResponseWriter, req *http.Re
 	}
 }
 
+// GetMetricsValidateErr проверяет, является ли ошибка ошибкой валидации метрики.
 func GetMetricsValidateErr(err error) bool {
 	return errors.Is(err, errorz.ErrUndefinedMetricType) ||
 		errors.Is(err, errorz.ErrUndefinedMetricName) ||
@@ -258,6 +294,22 @@ func GetMetricsValidateErr(err error) bool {
 		errors.Is(err, errorz.ErrMetricNotFound)
 }
 
+// UpdateMetricBatch обрабатывает пакетное обновление метрик.
+// Пример тела запроса:
+// [
+//
+//	{
+//	    "id": "Alloc",
+//	    "type": "gauge",
+//	    "value": 123.45
+//	},
+//	{
+//	    "id": "PollCount",
+//	    "type": "counter",
+//	    "delta": 1
+//	}
+//
+// ]
 func (h *MetricHandler) UpdateMetricBatch(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		log.Debug().Msg("http.StatusMethodNotAllowed")
@@ -292,6 +344,8 @@ func (h *MetricHandler) UpdateMetricBatch(res http.ResponseWriter, req *http.Req
 	}
 }
 
+// Ping возвращает обработчик для проверки соединения с базой данных.
+// Доступно по GET /ping.
 func (h *MetricHandler) Ping(pool Pool) func(res http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -312,8 +366,4 @@ func (h *MetricHandler) Ping(pool Pool) func(res http.ResponseWriter, req *http.
 		}
 		w.WriteHeader(http.StatusOK)
 	}
-}
-
-type Pool interface {
-	Ping(ctx context.Context) error
 }
